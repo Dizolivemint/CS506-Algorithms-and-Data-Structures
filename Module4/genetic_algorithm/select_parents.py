@@ -1,19 +1,24 @@
-def pmx_crossover(parent1, parent2, crossover_point1, crossover_point2):
-    size = len(parent1)
-    child = [-1] * size
+import numpy as np
 
-    child[crossover_point1:crossover_point2] = parent1[crossover_point1:crossover_point2]
+def select_parents(population, fitness_scores, num_parents):
+    """
+    Selects parents from the population based on their fitness scores using a probabilistic approach.
 
-    mapping = {}
-    for i in range(crossover_point1, crossover_point2):
-        if parent2[i] not in child:
-            mapping[parent2[i]] = parent1[i]
+    Parameters:
+    population (list): The current population of routes.
+    fitness_scores (ndarray): An array of fitness scores for the population.
+    num_parents (int): The number of parents to select.
 
-    for i in range(size):
-        if child[i] == -1:
-            candidate = parent2[i]
-            while candidate in mapping:
-                candidate = mapping[candidate]
-            child[i] = candidate
-
-    return child
+    Returns:
+    list: A list of selected parents.
+    """
+    # Calculate selection probabilities proportional to fitness scores
+    probabilities = fitness_scores / np.sum(fitness_scores)
+    
+    # Select parent indices based on the calculated probabilities
+    parents_indices = np.random.choice(range(len(population)), size=num_parents, p=probabilities)
+    
+    # Retrieve the selected parents from the population
+    parents = [population[i] for i in parents_indices]
+    
+    return parents
