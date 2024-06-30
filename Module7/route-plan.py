@@ -1,99 +1,133 @@
 import heapq
 from typing import Dict, List, Tuple
 
-# Define a class to represent the graph
 class Graph:
     def __init__(self):
-        self.nodes = {}  # Dictionary to store adjacency list of nodes
+        self.nodes = {}  # Dictionary to store nodes and their edges
+        self.distances = {}  # Store actual distances in miles
 
-    # Method to add edges to the graph
-    def add_edge(self, from_node: str, to_node: str, weight: int):
+    def add_edge(self, from_node: str, to_node: str, distance: float, speed: float):
+        """
+        Add an edge to the graph.
+        :param from_node: Starting node
+        :param to_node: Ending node
+        :param distance: Distance in miles
+        :param speed: Speed in mph
+        """
         if from_node not in self.nodes:
-            self.nodes[from_node] = {}  # Initialize an empty adjacency list for the node
-        self.nodes[from_node][to_node] = weight  # Add the edge with its weight
+            self.nodes[from_node] = {}
+        weight = distance / speed  # Calculate weight as time (hours)
+        self.nodes[from_node][to_node] = weight
+        self.distances[(from_node, to_node)] = distance  # Store the actual distance
         if to_node not in self.nodes:
-          self.nodes[to_node] = {} # Ensure the destination node is in the graph, even if it has no outgoing edges
+            self.nodes[to_node] = {}  # Ensure the destination node is in the graph, even if it has no outgoing edges
 
-# Function to perform Dijkstra's algorithm
-def dijkstra(graph: Graph, start: str, end: str) -> Tuple[List[str], int]:
-    distances = {node: float('infinity') for node in graph.nodes}  # Initialize distances to infinity
-    distances[start] = 0  # Distance to the start node is 0
-    pq = [(0, start)]  # Priority queue to select the node with the smallest distance
-    previous_nodes = {}  # Dictionary to store the path
+def dijkstra(graph: Graph, start: str, end: str) -> Tuple[List[str], float, float]:
+    """
+    Implement Dijkstra's algorithm to find the shortest path.
+    :return: Tuple of (path, total_time, total_distance)
+    """
+    times = {node: float('infinity') for node in graph.nodes}
+    times[start] = 0
+    pq = [(0, start)]  # Priority queue: (time, node)
+    previous_nodes = {}
+    total_distance = 0
 
     while pq:
-        current_distance, current_node = heapq.heappop(pq)  # Get the node with the smallest distance
+        current_time, current_node = heapq.heappop(pq)
 
-        if current_node == end:  # If we reach the end node, reconstruct the path
+        if current_node == end:
+            # Reconstruct the path and calculate total distance
             path = []
             while current_node:
                 path.append(current_node)
+                if previous_nodes.get(current_node):
+                    total_distance += graph.distances[(previous_nodes[current_node], current_node)]
                 current_node = previous_nodes.get(current_node)
-            return path[::-1], current_distance  # Return the reversed path and the total distance
+            return path[::-1], current_time, total_distance
 
-        if current_distance > distances[current_node]:
-            continue  # Skip processing if a better path is already found
+        if current_time > times[current_node]:
+            continue
 
         for neighbor, weight in graph.nodes[current_node].items():
-            distance = current_distance + weight  # Calculate the new distance
-            if distance < distances[neighbor]:  # If a shorter path is found
-                distances[neighbor] = distance  # Update the distance
-                previous_nodes[neighbor] = current_node  # Update the path
-                heapq.heappush(pq, (distance, neighbor))  # Push the new distance to the priority queue
+            time = current_time + weight
+            if time < times[neighbor]:
+                times[neighbor] = time
+                previous_nodes[neighbor] = current_node
+                heapq.heappush(pq, (time, neighbor))
 
-    return [], float('infinity')  # Return empty path and infinity if no path is found
+    return [], float('infinity'), float('infinity')
 
-# Function to update the graph with real-time traffic data
-def update_traffic_data(graph: Graph, traffic_updates: Dict[Tuple[str, str], int]):
-    for (from_node, to_node), new_weight in traffic_updates.items():
+def update_traffic_data(graph: Graph, traffic_updates: Dict[Tuple[str, str], float]):
+    """
+    Update the graph with new traffic data.
+    :param traffic_updates: Dictionary of edges and their new speeds in mph
+    """
+    for (from_node, to_node), new_speed in traffic_updates.items():
         if from_node in graph.nodes and to_node in graph.nodes[from_node]:
-            graph.nodes[from_node][to_node] = new_weight  # Update the edge weight with new traffic data
+            distance = graph.distances[(from_node, to_node)]
+            graph.nodes[from_node][to_node] = distance / new_speed
 
-# Function to optimize the route considering real-time traffic updates
-def optimize_route(graph: Graph, start: str, end: str, traffic_updates: Dict[Tuple[str, str], int]) -> Tuple[List[str], int]:
-    update_traffic_data(graph, traffic_updates)  # Update the graph with real-time traffic data
-    return dijkstra(graph, start, end)  # Perform Dijkstra's algorithm to find the optimal path
+def optimize_route(graph: Graph, start: str, end: str, traffic_updates: Dict[Tuple[str, str], float]) -> Tuple[List[str], float, float]:
+    """
+    Optimize the route based on current traffic conditions.
+    :return: Tuple of (optimal_path, total_time, total_distance)
+    """
+    update_traffic_data(graph, traffic_updates)
+    return dijkstra(graph, start, end)
 
-def print_route(start: str, end: str, traffic_scenario: str, traffic_updates: Dict[Tuple[str, str], int], graph: Graph):
-    optimal_path, total_distance = optimize_route(graph, start, end, traffic_updates)
+def format_time(hours: float) -> str:
+    """
+    Convert time from hours to a string format of minutes and seconds.
+    :param hours: Time in hours
+    :return: Formatted string of time in minutes and seconds
+    """
+    total_seconds = int(hours * 3600)  # Convert hours to seconds
+    minutes, seconds = divmod(total_seconds, 60)
+    return f"{minutes} minutes, {seconds} seconds"
+  
+def print_route(start: str, end: str, traffic_scenario: str, traffic_updates: Dict[Tuple[str, str], float], graph: Graph):
+    """
+    Print the optimal route for a given scenario.
+    """
+    optimal_path, total_time, total_distance = optimize_route(graph, start, end, traffic_updates)
+    formatted_time = format_time(total_time)
     print(f"\nScenario: {traffic_scenario}")
-    print(f"Traffic updates: {traffic_updates}")
+    print(f"Traffic updates (new speeds in mph): {traffic_updates}")
     print(f"Optimal path from {start} to {end}: {' -> '.join(optimal_path)}")
-    print(f"Total distance: {total_distance}")
+    print(f"Total time: {formatted_time}")
+    print(f"Total distance: {total_distance:.2f} miles")
 
 if __name__ == "__main__":
-    # Create the initial graph
+    # Create the graph
     g = Graph()
-    
-    # Example route plan
-    g.add_edge("A", "B", 4)
-    g.add_edge("A", "C", 2)
-    g.add_edge("B", "D", 3)
-    g.add_edge("C", "D", 1)
-    g.add_edge("C", "E", 5)
-    g.add_edge("D", "E", 2)
+    # Adding edges with distance (miles) and initial speed (mph)
+    g.add_edge("A", "B", 2, 35)  # 2 miles, initial speed 35 mph
+    g.add_edge("A", "C", 1.5, 35)  # 1.5 miles, initial speed 35 mph
+    g.add_edge("B", "D", 4.5, 45)  # 4.5 miles, initial speed 45 mph
+    g.add_edge("C", "D", 6, 55)  # 6 miles, initial speed 55 mph
+    g.add_edge("C", "E", 2.5, 35)  # 2.5 miles, initial speed 35 mph
+    g.add_edge("D", "E", 3, 30)  # 3 miles, initial speed 30 mph
 
-    # Scenario: No traffic updates (baseline)
+    # Scenario 1: No traffic updates (baseline)
     print_route("A", "E", "Baseline - No traffic", {}, g)
 
-    # Scenario: Decrease traffic on A-B and increase on C-D
+    # Scenario 2: Traffic jam on C-E
     traffic_updates_1 = {
-        ("A", "B"): 1,  # Decrease traffic on edge A-B
-        ("C", "D"): 3,  # Slight increase in traffic on edge C-D
+        ("C", "E"): 10,  # Speed reduced to 10 mph on the optimal path
     }
-    print_route("A", "E", "Decrease traffic on A-B and increase on C-D", traffic_updates_1, g)
+    print_route("A", "E", "Traffic jam on C-E", traffic_updates_1, g)
 
-    # Scenario: Heavy traffic on C-D
+    # Scenario 3: Heavy traffic on A-C
     traffic_updates_2 = {
-        ("C", "D"): 5,  # Heavy traffic on edge C-D
+        ("A", "C"): 15,  # Speed reduced to 15 mph
     }
-    print_route("A", "E", "Heavy traffic on C-D", traffic_updates_2, g)
+    print_route("A", "E", "Heavy traffic on A-C", traffic_updates_2, g)
 
-    # Scenario: Multiple route changes
-    traffic_updates_4 = {
-        ("A", "B"): 1,  # A-B becomes very fast
-        ("B", "D"): 1,  # B-D becomes very fast
-        ("C", "D"): 6,  # C-D becomes slow
-        ("C", "E"): 10, # C-E becomes very slow
+    # Scenario 4: Fast route opened
+    traffic_updates_3 = {
+        ("A", "B"): 60,  # Speed increased to 60 mph
+        ("B", "D"): 60,  # Speed increased to 60 mph
+        ("D", "E"): 60,  # Speed increased to 60 mph
     }
-    print_route("A", "E", "Multiple route changes", traffic_updates_4, g)
+    print_route("A", "E", "Fast route A-B-D-E opened", traffic_updates_3, g)
