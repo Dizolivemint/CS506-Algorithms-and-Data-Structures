@@ -8,25 +8,7 @@ from genetic_algorithm.pmx_crossover import pmx_crossover
 from genetic_algorithm.ox_crossover import ox_crossover
 from genetic_algorithm.mutate import mutate
 
-def genetic_algorithm(distance_matrix, pop_size, mutation_rate, crossover_rate, use_pmx=False, use_ox=False, use_elitism=False, fitness_threshold=None, no_improvement_generations=100):
-    """
-    Runs the genetic algorithm to solve the Traveling Salesman Problem (TSP) with dynamic convergence.
-
-    Parameters:
-    distance_matrix (ndarray): A 2D array where element [i, j] represents the distance from city i to city j.
-    pop_size (int): The size of the population.
-    mutation_rate (float): The probability of mutation for each city in the route.
-    crossover_rate (float): The probability of crossover between pairs of parents.
-    use_pmx (bool): If True, use Partially Mapped Crossover (PMX).
-    use_ox (bool): If True, use Order Crossover (OX).
-    use_elitism (bool): If True, carry the best individual to the next generation.
-    fitness_threshold (float): The fitness value at which the algorithm will stop if reached.
-    no_improvement_generations (int): The number of generations with no significant improvement after which the algorithm will stop.
-
-    Returns:
-    tuple: The best route found, its fitness score, and the distance.
-    """
-    
+def genetic_algorithm(distance_matrix, pop_size, mutation_rate, crossover_rate, use_pmx, use_ox, use_elitism, fitness_threshold, no_improvement_generations):
     # Number of cities in the distance matrix
     num_cities = len(distance_matrix)
     
@@ -67,13 +49,19 @@ def genetic_algorithm(distance_matrix, pop_size, mutation_rate, crossover_rate, 
         else:
             generations_no_improvement += 1
 
+        # Yield the current best solution
+        yield {
+            'generation': generation,
+            'route': best_route.tolist() if isinstance(best_route, np.ndarray) else best_route,
+            'distance': best_distance,
+            'fitness': best_fitness
+        }
+
         # Check convergence criteria
         if fitness_threshold is not None and best_fitness >= fitness_threshold:
-            print(f"Convergence achieved: fitness threshold {fitness_threshold} reached.")
             break
 
         if generations_no_improvement >= no_improvement_generations:
-            print(f"Convergence achieved: no significant improvement for {no_improvement_generations} generations.")
             break
 
         # Select parents based on their fitness scores
@@ -116,4 +104,3 @@ def genetic_algorithm(distance_matrix, pop_size, mutation_rate, crossover_rate, 
         # Replace the old population with the new one
         population = next_population
 
-    return best_route, best_fitness, best_distance

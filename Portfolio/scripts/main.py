@@ -24,90 +24,36 @@ def main(file_name):
         raise ValueError("Distance matrix contains zero values off the diagonal.")
     
     # Run the genetic algorithm with different configurations
-    print("Running GA without PMX, OX, or Elitism:")
-    best_route, best_fitness, best_distance = genetic_algorithm(
-        distance_matrix, 
-        pop_size=100, 
-        mutation_rate=0.01, 
-        crossover_rate=0.7, 
-        use_pmx=False, 
-        use_ox=False, 
-        use_elitism=False,
-        fitness_threshold=None,  # Set a desired fitness threshold if known
-        no_improvement_generations=20  # Number of generations to wait for improvement
-    )
-    print_route(best_route, best_distance, best_fitness)
-    
-    print("Running GA with PMX:")
-    best_route, best_fitness, best_distance = genetic_algorithm(
-        distance_matrix, 
-        pop_size=100, 
-        mutation_rate=0.01, 
-        crossover_rate=0.7, 
-        use_pmx=True, 
-        use_ox=False, 
-        use_elitism=False,
-        fitness_threshold=None,
-        no_improvement_generations=20
-    )
-    print_route(best_route, best_distance, best_fitness)
-    
-    print("Running GA with OX:")
-    best_route, best_fitness, best_distance = genetic_algorithm(
-        distance_matrix, 
-        pop_size=100, 
-        mutation_rate=0.01, 
-        crossover_rate=0.7, 
-        use_pmx=False, 
-        use_ox=True, 
-        use_elitism=False,
-        fitness_threshold=None,
-        no_improvement_generations=20
-    )
-    print_route(best_route, best_distance, best_fitness)
-    
-    print("Running GA with Elitism:")
-    best_route, best_fitness, best_distance = genetic_algorithm(
-        distance_matrix, 
-        pop_size=100, 
-        mutation_rate=0.01, 
-        crossover_rate=0.7, 
-        use_pmx=False, 
-        use_ox=False, 
-        use_elitism=True,
-        fitness_threshold=None,
-        no_improvement_generations=20
-    )
-    print_route(best_route, best_distance, best_fitness)
-    
-    print("Running GA with PMX and Elitism:")
-    best_route, best_fitness, best_distance = genetic_algorithm(
-        distance_matrix, 
-        pop_size=100, 
-        mutation_rate=0.01, 
-        crossover_rate=0.7, 
-        use_pmx=True, 
-        use_ox=False, 
-        use_elitism=True,
-        fitness_threshold=None,
-        no_improvement_generations=20
-    )
-    print_route(best_route, best_distance, best_fitness)
-    
-    print("Running GA with OX and Elitism:")
-    best_route, best_fitness, best_distance = genetic_algorithm(
-        distance_matrix, 
-        pop_size=100, 
-        mutation_rate=0.01, 
-        crossover_rate=0.7, 
-        use_pmx=False, 
-        use_ox=True, 
-        use_elitism=True,
-        fitness_threshold=None,
-        no_improvement_generations=20
-    )
-    print_route(best_route, best_distance, best_fitness)
+    configurations = [
+        {"description": "GA without PMX, OX, or Elitism", "use_pmx": False, "use_ox": False, "use_elitism": False},
+        {"description": "GA with PMX", "use_pmx": True, "use_ox": False, "use_elitism": False},
+        {"description": "GA with OX", "use_pmx": False, "use_ox": True, "use_elitism": False},
+        {"description": "GA with Elitism", "use_pmx": False, "use_ox": False, "use_elitism": True},
+        {"description": "GA with PMX and Elitism", "use_pmx": True, "use_ox": False, "use_elitism": True},
+        {"description": "GA with OX and Elitism", "use_pmx": False, "use_ox": True, "use_elitism": True},
+    ]
 
+    for config in configurations:
+        print(f"Running {config['description']}:")
+        ga_generator = genetic_algorithm(
+            distance_matrix, 
+            pop_size=100, 
+            mutation_rate=0.01, 
+            crossover_rate=0.7, 
+            use_pmx=config['use_pmx'], 
+            use_ox=config['use_ox'], 
+            use_elitism=config['use_elitism'],
+            fitness_threshold=None,  # Set a desired fitness threshold if known
+            no_improvement_generations=20  # Number of generations to wait for improvement
+        )
+        
+        for solution in ga_generator:
+            best_route = solution['route']
+            best_fitness = solution['fitness']
+            best_distance = solution['distance']
+
+        print_route(best_route, best_distance, best_fitness)
+    
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run the genetic algorithm with a specified distance matrix file.')
     parser.add_argument('file_name', type=str, help='The CSV file containing the distance matrix')
