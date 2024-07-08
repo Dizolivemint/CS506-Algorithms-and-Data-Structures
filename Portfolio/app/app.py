@@ -1,10 +1,12 @@
-from flask import Flask, request, Response
+from flask import Flask, request, Response, jsonify
 from flask_cors import CORS
 import pandas as pd
 import numpy as np
 import json
 from genetic_algorithm.genetic_algorithm import genetic_algorithm
 import io
+import time
+import itertools
 
 app = Flask(__name__)
 CORS(app)
@@ -27,6 +29,8 @@ def convert_to_serializable(obj):
 
 def stream_solutions(distance_matrix, pop_size, mutation_rate, crossover_rate, use_pmx, use_ox, use_elitism, fitness_threshold, no_improvement_generations):
     def generate():
+        start_time = time.time()
+
         for solution in genetic_algorithm(
             distance_matrix, 
             pop_size=pop_size, 
@@ -40,6 +44,13 @@ def stream_solutions(distance_matrix, pop_size, mutation_rate, crossover_rate, u
         ):
             serializable_solution = {k: convert_to_serializable(v) for k, v in solution.items()}
             yield f"data: {json.dumps(serializable_solution)}\n\n"
+        
+        end_time = time.time()  # End time
+        total_time = end_time - start_time  # Calculate total time
+        
+        # Yield the total time at the end of the event stream
+        yield f"data: {json.dumps({'total_time': total_time})}\n\n"
+        
     return Response(generate(), mimetype='text/event-stream')
 
 @app.route('/run-ga', methods=['POST'])
@@ -85,5 +96,50 @@ def stream_solutions_endpoint():
     # This function should be implemented if you need a separate endpoint for streaming solutions
     return Response("Not implemented", status=501)
 
+@app.route('/brute', methods=['GET'])
+def brute_force_tsp():
+    # Assuming the distance matrix is passed as a query parameter
+    distance_matrix = request.args.get('distance_matrix')
+    if not distance_matrix:
+        return "Missing distance matrix", 400
+
+    distance_matrix = np.array(json.loads(distance_matrix))
+
+    def find_best_brute_force_solution(distance_matrix):
+        num_cities = len(distance_matrix)
+        cities = list(range(num_cities))
+        
+        start_time = time.time()
+        best_route = None
+        best_distance = float('inf')
+        
+        for permutation in itertools.permutations(cities):
+            # Ensuring the route starts and ends with the first city
+            if permutation[0] != 0:
+                continue
+            route = list(permutation) + [permutation[0]]
+            distance = sum(distance_matrix[route[i], route[i + 1]] for i in range(num_cities))
+
+            if distance < best_distance:
+                best_distance = distance
+                best_route = route
+        
+        end_time = time.time()
+        total_time = end_time - start_time
+
+        return {
+            'final_best_route': best_route,
+            'final_best_distance': best_distance / 1000,
+            'total_time': total_time
+        }
+
+    # Get the best solution
+    best_solution = find_best_brute_force_solution(distance_matrix)
+    
+    # Convert to serializable format
+    serializable_solution = convert_to_serializable(best_solution)
+    
+    return jsonify(serializable_solution)
+  
 if __name__ == '__main__':
     app.run(port=5000)
