@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import styled from 'styled-components';
 import L from 'leaflet';
 import Loader from './components/loader';
+import Tooltip from './components/tooltip';
 
 interface Solution {
   generation: number;
@@ -169,7 +170,6 @@ const Map: React.FC = () => {
           })();
         }
       });
-    setIsSubmitting(false);
   };
 
   const handleBruteForceSubmit = () => {
@@ -192,11 +192,11 @@ const Map: React.FC = () => {
             };
 
             setSolutions([finalSolution]);
+            setIsSubmitting(false);
         })
         .catch(error => {
             console.error("Error fetching brute force solution:", error);
         });
-    setIsSubmitting(false);
   };
 
   useEffect(() => {
@@ -206,6 +206,9 @@ const Map: React.FC = () => {
       }
     }, 1000); // Delay in ms between showing each solution
 
+    if (currentSolutionIndex === solutions.length - 1) {
+      setIsSubmitting(false);
+    }
     return () => clearInterval(interval);
   }, [solutions, currentSolutionIndex]);
 
@@ -222,38 +225,47 @@ const Map: React.FC = () => {
   return (
     <Wrapper>
       <Container>
+        <h2>Genetic Algorithm Parameters</h2>
         <Form onSubmit={handleSubmit}>
           <Label>
             Population Size:
             <Input type="number" value={popSize} onChange={(e) => setPopSize(Number(e.target.value))} />
+            <Tooltip text="The number of individuals in the population." />
           </Label>
           <Label>
             Mutation Rate:
             <Input type="number" step="0.01" value={mutationRate} onChange={(e) => setMutationRate(Number(e.target.value))} />
+            <Tooltip text="The probability of mutating each individual." />
           </Label>
           <Label>
             Crossover Rate:
             <Input type="number" step="0.01" value={crossoverRate} onChange={(e) => setCrossoverRate(Number(e.target.value))} />
+            <Tooltip text="The probability of crossover between individuals." />
           </Label>
           <Label>
             Use PMX:
             <Input type="checkbox" checked={usePmx} onChange={(e) => setUsePmx(e.target.checked)} />
+            <Tooltip text="Whether to use Partially Mapped Crossover (PMX)." />
           </Label>
           <Label>
             Use OX:
             <Input type="checkbox" checked={useOx} onChange={(e) => setUseOx(e.target.checked)} />
+            <Tooltip text="Whether to use Order Crossover (OX)." />
           </Label>
           <Label>
             Use Elitism:
             <Input type="checkbox" checked={useElitism} onChange={(e) => setUseElitism(e.target.checked)} />
+            <Tooltip text="Whether to use elitism (preserve the best individual)." />
           </Label>
           <Label>
             Fitness Threshold:
             <Input type="number" value={fitnessThreshold} onChange={(e) => setFitnessThreshold(e.target.value ? Number(e.target.value) : undefined)} />
+            <Tooltip text="The fitness value at which the algorithm stops." />
           </Label>
           <Label>
             No Improvement Generations:
             <Input type="number" value={noImprovementGenerations} onChange={(e) => setNoImprovementGenerations(Number(e.target.value))} />
+            <Tooltip text="The number of generations with no improvement after which the algorithm stops." />
           </Label>
           {isSubmitting ? <Loader /> : (
             <>
