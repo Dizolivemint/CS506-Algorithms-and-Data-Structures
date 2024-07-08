@@ -98,6 +98,10 @@ const Form = styled.form`
 
 const Label = styled.label`
   margin: 5px 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
 `;
 
 const Input = styled.input`
@@ -120,8 +124,8 @@ const RouteList = styled.div`
 `;
 
 const CustomCheckbox = styled.input.attrs({ type: 'checkbox' })`
-  width: 40px; /* Adjust the width */
-  height: 40px; /* Adjust the height */
+  width: 40px;
+  height: 40px;
   appearance: none;
   background-color: #fff;
   border: 2px solid #007bff;
@@ -131,18 +135,6 @@ const CustomCheckbox = styled.input.attrs({ type: 'checkbox' })`
 
   &:checked {
     background-color: #007bff;
-  }
-
-  &:checked::after {
-    content: '';
-    position: absolute;
-    top: 2px;
-    left: 6px;
-    width: 4px;
-    height: 8px;
-    border: solid white;
-    border-width: 0 2px 2px 0;
-    transform: rotate(45deg);
   }
 `;
 
