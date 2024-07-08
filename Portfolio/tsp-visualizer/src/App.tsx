@@ -54,6 +54,7 @@ const Container = styled.div`
   flex-direction: column;
   align-items: center;
   margin: 0 20px;
+  flex-wrap: wrap;
 `;
 
 const Form = styled.form`
@@ -112,6 +113,9 @@ const Map: React.FC = () => {
     "San Jose, CA",4727992,547589,3482706,3034648,1144932,4678491,2720126,738897,2718674,0`
   ];
 
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const url = isLocalhost ? 'http://localhost:5000' : 'https://cs506-algorithms-and-data-structures.onrender.com';
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const formData = new FormData();
@@ -125,10 +129,7 @@ const Map: React.FC = () => {
     formData.append('fitness_threshold', fitnessThreshold ? fitnessThreshold.toString() : '');
     formData.append('no_improvement_generations', noImprovementGenerations.toString());
 
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    const url = isLocalhost ? 'http://localhost:5000/run-ga' : 'https://tsp-genetic-algorithm.herokuapp.com/run-ga';
-
-    fetch(url, {
+    fetch(`${url}/run-ga`, {
       method: 'POST',
       body: formData,
     })
@@ -167,7 +168,7 @@ const Map: React.FC = () => {
     const distanceMatrixString = JSON.stringify(Object.values(distanceMatrix));
     setSolutions([]);
 
-    fetch(`http://localhost:5000/brute?distance_matrix=${encodeURIComponent(distanceMatrixString)}`)
+    fetch(`${url}/brute?distance_matrix=${encodeURIComponent(distanceMatrixString)}`)
         .then(response => response.json())
         .then(parsedData => {
             if (parsedData.total_time) {
