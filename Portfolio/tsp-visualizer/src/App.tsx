@@ -82,6 +82,23 @@ const Wrapper = styled.div`
   }
 `;
 
+const Title = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  border-bottom: 1px solid #dfdfdf;
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+
+`;
+
+const Avatar = styled.img`
+  border: 4px solid #dfdfdf;
+  border-radius: 50%;
+  width: 50px;
+`;
+
 const Container = styled.div`
   display: flex;
   flex-direction: column;
@@ -274,6 +291,10 @@ const Map: React.FC = () => {
       <Wrapper>
         <Container>
           <Container>
+            <Title>
+              <h1>Traveling Salesman Problem Visualizer</h1>
+              <Avatar src="avatar.png" alt="USA Map" style={{ width: '50px' }} />
+            </Title>
             <img src="genetic-algorithm.webp" alt="USA Map" style={{ width: '100%' }} />
           </Container>
           <Container>
