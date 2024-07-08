@@ -7,6 +7,7 @@ from genetic_algorithm.genetic_algorithm import genetic_algorithm
 import io
 import time
 import itertools
+import os
 
 app = Flask(__name__)
 CORS(app)
@@ -142,4 +143,12 @@ def brute_force_tsp():
     return jsonify(serializable_solution)
   
 if __name__ == '__main__':
-    app.run(port=5000)
+    # Check if the app is running on Render
+    render = os.environ.get("RENDER", False)
+    if render:
+        # Running on Render, use the provided PORT
+        port = int(os.environ.get("PORT", 5000))
+        app.run(host="0.0.0.0", port=port)
+    else:
+        # Running locally
+        app.run(host="127.0.0.1", port=5000)
