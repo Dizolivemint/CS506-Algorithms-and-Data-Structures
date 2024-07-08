@@ -93,5 +93,11 @@ def genetic_algorithm(distance_matrix, pop_size, mutation_rate, crossover_rate, 
 
         if use_elitism:
             next_population[0] = best_gen_route
+            
+        # Ensure the start city appears only at the beginning and end
+        next_population = [
+            route for route in next_population
+            if list(route).count(start_city) == 2 and route[0] == start_city and route[-1] == start_city
+        ]
 
         population = next_population

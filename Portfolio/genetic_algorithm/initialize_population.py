@@ -14,7 +14,7 @@ def initialize_population(pop_size, num_cities):
     population = []  # List to store the population of routes
     for _ in range(pop_size):
         # Create a random permutation of city indices
-        individual = np.random.permutation(num_cities)
+        individual = np.random.permutation(np.arange(1, num_cities))
         # Add the individual route to the population
         population.append(individual)
     return population
