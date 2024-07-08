@@ -1,10 +1,29 @@
 import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Polyline, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import styled from 'styled-components';
+import styled, { createGlobalStyle } from 'styled-components';
 import L from 'leaflet';
 import Loader from './components/loader';
 import Tooltip from './components/tooltip';
+
+const GlobalStyle = createGlobalStyle`
+  @import url('https://fonts.googleapis.com/css2?family=Maven+Pro:wght@400;700&family=Nunito:wght@300;400;600;700&display=swap');
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    font-size: clamp(1rem, 1.5vw, 2rem);
+    
+  }
+
+  h2 {
+    font-family: 'Maven Pro', sans-serif;
+  }
+
+  label, input, button {
+    font-family: 'Nunito', sans-serif;
+    font-size: clamp(1rem, 1.5vw, 2rem);
+  }
+`;
 
 interface Solution {
   generation: number;
@@ -12,6 +31,8 @@ interface Solution {
   distance: number;
   fitness: number;
 }
+
+const year = new Date().getFullYear();
 
 const cityCoordinates: { [key: string]: [number, number] } = {
   "New York, NY": [40.7128, -74.0060],
@@ -50,15 +71,20 @@ const Wrapper = styled.div`
   align-items: flex-start;
   margin: 20px;
 
-  @media (max-width: 1680px) {
+  @media (max-width: 900px) {
     flex-direction: column;
+  }
+
+  & h2 {
+    border-bottom: 1px solid #dfdfdf;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
   }
 `;
 
 const Container = styled.div`
   display: flex;
   flex-direction: column;
-  align-items: center;
   margin: 0 20px;
   flex-wrap: wrap;
 `;
@@ -76,6 +102,7 @@ const Label = styled.label`
 
 const Input = styled.input`
   margin: 5px 0;
+  padding: 10px;
 `;
 
 const Button = styled.button`
@@ -90,6 +117,33 @@ const Button = styled.button`
 
 const RouteList = styled.div`
   text-align: left;
+`;
+
+const CustomCheckbox = styled.input.attrs({ type: 'checkbox' })`
+  width: 40px; /* Adjust the width */
+  height: 40px; /* Adjust the height */
+  appearance: none;
+  background-color: #fff;
+  border: 2px solid #007bff;
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative;
+
+  &:checked {
+    background-color: #007bff;
+  }
+
+  &:checked::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 6px;
+    width: 4px;
+    height: 8px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
 `;
 
 const Map: React.FC = () => {
@@ -223,99 +277,120 @@ const Map: React.FC = () => {
   }
 
   return (
-    <Wrapper>
-      <Container>
-        <h2>Genetic Algorithm Parameters</h2>
-        <Form onSubmit={handleSubmit}>
-          <Label>
-            Population Size:
-            <Input type="number" value={popSize} onChange={(e) => setPopSize(Number(e.target.value))} />
-            <Tooltip text="The number of individuals in the population." />
-          </Label>
-          <Label>
-            Mutation Rate:
-            <Input type="number" step="0.01" value={mutationRate} onChange={(e) => setMutationRate(Number(e.target.value))} />
-            <Tooltip text="The probability of mutating each individual." />
-          </Label>
-          <Label>
-            Crossover Rate:
-            <Input type="number" step="0.01" value={crossoverRate} onChange={(e) => setCrossoverRate(Number(e.target.value))} />
-            <Tooltip text="The probability of crossover between individuals." />
-          </Label>
-          <Label>
-            Use PMX:
-            <Input type="checkbox" checked={usePmx} onChange={(e) => setUsePmx(e.target.checked)} />
-            <Tooltip text="Whether to use Partially Mapped Crossover (PMX)." />
-          </Label>
-          <Label>
-            Use OX:
-            <Input type="checkbox" checked={useOx} onChange={(e) => setUseOx(e.target.checked)} />
-            <Tooltip text="Whether to use Order Crossover (OX)." />
-          </Label>
-          <Label>
-            Use Elitism:
-            <Input type="checkbox" checked={useElitism} onChange={(e) => setUseElitism(e.target.checked)} />
-            <Tooltip text="Whether to use elitism (preserve the best individual)." />
-          </Label>
-          <Label>
-            Fitness Threshold:
-            <Input type="number" value={fitnessThreshold} onChange={(e) => setFitnessThreshold(e.target.value ? Number(e.target.value) : undefined)} />
-            <Tooltip text="The fitness value at which the algorithm stops." />
-          </Label>
-          <Label>
-            No Improvement Generations:
-            <Input type="number" value={noImprovementGenerations} onChange={(e) => setNoImprovementGenerations(Number(e.target.value))} />
-            <Tooltip text="The number of generations with no improvement after which the algorithm stops." />
-          </Label>
-          {isSubmitting ? <Loader /> : (
+    <>
+      <GlobalStyle />
+      <Wrapper>
+        <Container>
+          <Container>
+            <img src="genetic-algorithm.webp" alt="USA Map" style={{ width: '100%' }} />
+          </Container>
+          <Container>
+            <h2>Genetic Algorithm Parameters</h2>
+            <Form onSubmit={handleSubmit}>
+              <Label>
+                Population Size:
+                <Input type="number" value={popSize} onChange={(e) => setPopSize(Number(e.target.value))} />
+                <Tooltip text="The number of individuals in the population." />
+              </Label>
+              <Label>
+                Mutation Rate:
+                <Input type="number" step="0.01" value={mutationRate} onChange={(e) => setMutationRate(Number(e.target.value))} />
+                <Tooltip text="The probability of mutating each individual." />
+              </Label>
+              <Label>
+                Crossover Rate:
+                <Input type="number" step="0.01" value={crossoverRate} onChange={(e) => setCrossoverRate(Number(e.target.value))} />
+                <Tooltip text="The probability of crossover between individuals." />
+              </Label>
+              <Label>
+                Use PMX:
+                <CustomCheckbox type="checkbox" checked={usePmx} onChange={(e) => setUsePmx(e.target.checked)} />
+                <Tooltip text="Whether to use Partially Mapped Crossover (PMX)." />
+              </Label>
+              <Label>
+                Use OX:
+                <CustomCheckbox type="checkbox" checked={useOx} onChange={(e) => setUseOx(e.target.checked)} />
+                <Tooltip text="Whether to use Order Crossover (OX)." />
+              </Label>
+              <Label>
+                Use Elitism:
+                <CustomCheckbox type="checkbox" checked={useElitism} onChange={(e) => setUseElitism(e.target.checked)} />
+                <Tooltip text="Whether to use elitism (preserve the best individual)." />
+              </Label>
+              <Label>
+                Fitness Threshold:
+                <Input type="number" value={fitnessThreshold} onChange={(e) => setFitnessThreshold(e.target.value ? Number(e.target.value) : undefined)} />
+                <Tooltip text="The fitness value at which the algorithm stops." />
+              </Label>
+              <Label>
+                No Improvement Generations:
+                <Input type="number" value={noImprovementGenerations} onChange={(e) => setNoImprovementGenerations(Number(e.target.value))} />
+                <Tooltip text="The number of generations with no improvement after which the algorithm stops." />
+              </Label>
+              {isSubmitting ? <Loader /> : (
+                <>
+                  <Button type="submit">Run Genetic Algorithm</Button>
+                  <Button type="button" onClick={handleBruteForceSubmit}>Run Brute Force</Button>
+                </>
+              )}
+            </Form>
+          </Container>
+          <Container>
+            <h2>Solutions</h2>
+            <RouteList>
+              {currentSolution && (
+                <>
+                  <h3>Genetic Route Details</h3>
+                  <p><b>Generation:</b> {currentSolution.generation}</p>
+                  {currentSolution.route.map((cityIndex, idx) => {
+                    const nextCityIndex = currentSolution.route[(idx + 1) % currentSolution.route.length];
+                    const cityName = distanceMatrixIndex[cityIndex];
+                    const nextCityName = distanceMatrixIndex[nextCityIndex];
+                    const cityMatrix = distanceMatrix[cityName];
+                    const distance = cityMatrix[distanceMatrixIndex.indexOf(nextCityName)];
+                    return (
+                      <p key={idx}><b>{cityName} to {nextCityName}:</b> {distance / 1000} km</p>
+                    );
+                  })}
+                  <p><b>Total:</b> {currentSolution.distance} km</p>
+                  <p><b>Execution Time:</b> {executionTime ? `${executionTime} ms` : 'N/A'}</p>
+                  <p><b>Note:</b> there is a delay in the display of each generation. Hence, why the execution time has completed calculating.</p>
+                </>
+              )}
+            </RouteList>
+          </Container>
+        </Container>
+        <Container style={{ width: '100%' }}>
+        <Container>
+        <MapContainer center={[39.8283, -98.5795]} zoom={5} style={{ height: '100vh', width: '95%' }}>
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+          />
+          {routeCoordinates.length > 0 && (
             <>
-              <Button type="submit">Run Genetic Algorithm</Button>
-              <Button type="button" onClick={handleBruteForceSubmit}>Run Brute Force</Button>
+              <Polyline positions={routeCoordinates} color="blue" />
+              <Marker position={routeCoordinates[0]} icon={L.divIcon({ className: 'start-marker', html: '<div style="background-color: red; width: 10px; height: 10px; border-radius: 50%;"></div>' })}>
+                <Popup>
+                  Start: New York, NY
+                </Popup>
+              </Marker>
             </>
           )}
-        </Form>
-      </Container>
-      <Container>
-        <h2>Solutions</h2>
-        <RouteList>
-          {currentSolution && (
-            <>
-              <h3>Genetic Route Details</h3>
-              <p><b>Generation:</b> {currentSolution.generation}</p>
-              {currentSolution.route.map((cityIndex, idx) => {
-                const nextCityIndex = currentSolution.route[(idx + 1) % currentSolution.route.length];
-                const cityName = distanceMatrixIndex[cityIndex];
-                const nextCityName = distanceMatrixIndex[nextCityIndex];
-                const cityMatrix = distanceMatrix[cityName];
-                const distance = cityMatrix[distanceMatrixIndex.indexOf(nextCityName)];
-                return (
-                  <p key={idx}><b>{cityName} to {nextCityName}:</b> {distance / 1000} km</p>
-                );
-              })}
-              <p><b>Total:</b> {currentSolution.distance} km</p>
-              <p><b>Execution Time:</b> {executionTime ? `${executionTime} ms` : 'N/A'}</p>
-              <p><b>Note:</b> there is a delay in the display of each generation. Hence, why the execution time has completed calculating.</p>
-            </>
-          )}
-        </RouteList>
-      </Container>
-      <MapContainer center={[39.8283, -98.5795]} zoom={5} style={{ height: '100vh', width: '95%' }}>
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-        />
-        {routeCoordinates.length > 0 && (
-          <>
-            <Polyline positions={routeCoordinates} color="blue" />
-            <Marker position={routeCoordinates[0]} icon={L.divIcon({ className: 'start-marker', html: '<div style="background-color: red; width: 10px; height: 10px; border-radius: 50%;"></div>' })}>
-              <Popup>
-                Start: New York, NY
-              </Popup>
-            </Marker>
-          </>
-        )}
-      </MapContainer>
-    </Wrapper>
+        </MapContainer>
+        </Container>
+        <Container>
+          <h2>About</h2>
+          <ul style={{ listStyle: "none", margin: 0 }}>
+          <li>Designed, built, and deployed by Miles Exner</li>
+          <li>Portfolio Project for CS506 | Algorithms and Data Structures</li>
+          <li>Source available on <a href="https://github.com/Dizolivemint/CS506-Algorithms-and-Data-Structures">GitHub</a></li>
+          <li>Copyright {year}</li>
+          </ul>
+        </Container>
+        </Container>
+      </Wrapper>
+    </>
   );
 };
 
