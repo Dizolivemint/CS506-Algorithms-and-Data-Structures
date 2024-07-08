@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Polyline, Marker, Popup } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css';
 import styled from 'styled-components';
 import L from 'leaflet';
+import Loader from './components/loader';
 
 interface Solution {
   generation: number;
@@ -102,7 +103,7 @@ const Map: React.FC = () => {
   const [fitnessThreshold, setFitnessThreshold] = useState<number | undefined>(undefined);
   const [noImprovementGenerations, setNoImprovementGenerations] = useState(20);
   const [executionTime, setExecutionTime] = useState<number | null>(null);
-  const [isGenetic, setIsGenetic] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const blob = [`,"New York, NY","Los Angeles, CA","Chicago, IL","Houston, TX","Phoenix, AZ","Philadelphia, PA","San Antonio, TX","San Diego, CA","Dallas, TX","San Jose, CA"
     "New York, NY",0,4488604,1271038,2617854,3872715,151753,2931721,4440447,2489493,4721507
@@ -121,6 +122,8 @@ const Map: React.FC = () => {
   const url = isLocalhost ? 'http://localhost:5000' : 'https://cs506-algorithms-and-data-structures.onrender.com';
 
   const handleSubmit = (e: React.FormEvent) => {
+    setIsSubmitting(true);
+
     e.preventDefault();
     const formData = new FormData();
     formData.append('file', new Blob(blob, { type: 'text/csv' }));
@@ -166,9 +169,11 @@ const Map: React.FC = () => {
           })();
         }
       });
+    setIsSubmitting(false);
   };
 
   const handleBruteForceSubmit = () => {
+    setIsSubmitting(true);
     const distanceMatrixString = JSON.stringify(Object.values(distanceMatrix));
     setSolutions([]);
 
@@ -191,6 +196,7 @@ const Map: React.FC = () => {
         .catch(error => {
             console.error("Error fetching brute force solution:", error);
         });
+    setIsSubmitting(false);
   };
 
   useEffect(() => {
@@ -249,8 +255,12 @@ const Map: React.FC = () => {
             No Improvement Generations:
             <Input type="number" value={noImprovementGenerations} onChange={(e) => setNoImprovementGenerations(Number(e.target.value))} />
           </Label>
-          <Button type="submit">Run Genetic Algorithm</Button>
-          <Button type="button" onClick={handleBruteForceSubmit}>Run Brute Force</Button>
+          {isSubmitting ? <Loader /> : (
+            <>
+              <Button type="submit">Run Genetic Algorithm</Button>
+              <Button type="button" onClick={handleBruteForceSubmit}>Run Brute Force</Button>
+            </>
+          )}
         </Form>
       </Container>
       <Container>
@@ -277,7 +287,7 @@ const Map: React.FC = () => {
           )}
         </RouteList>
       </Container>
-      <MapContainer center={[39.8283, -98.5795]} zoom={5} style={{ height: '100vh', width: '100%' }}>
+      <MapContainer center={[39.8283, -98.5795]} zoom={5} style={{ height: '100vh', width: '95%' }}>
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
