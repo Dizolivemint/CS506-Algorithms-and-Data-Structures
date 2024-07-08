@@ -1,6 +1,6 @@
 # CS506-Algorithms-and-Data-Structures 
 
-## Portfolio
+# Portfolio
 # Traveling Salesman Problem (TSP) Solver
 
 This project provides a solution to the Traveling Salesman Problem (TSP) using both brute force and genetic algorithms. It consists of a React frontend and a Python backend.
