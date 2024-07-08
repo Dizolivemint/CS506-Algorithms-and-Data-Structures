@@ -105,6 +105,8 @@ const Label = styled.label`
 const Input = styled.input`
   margin: 5px 0;
   padding: 10px;
+  font: 'Nunito', sans-serif;
+  font-size: clamp(1rem, 1.5vw, 2rem);
 `;
 
 const Button = styled.button`
@@ -115,6 +117,8 @@ const Button = styled.button`
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  font: 'Nunito', sans-serif;
+  font-size: clamp(1rem, 1.5vw, 2rem);
 `;
 
 const RouteList = styled.div`
