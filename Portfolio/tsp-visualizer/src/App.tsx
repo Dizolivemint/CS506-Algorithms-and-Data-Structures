@@ -252,7 +252,7 @@ const Map: React.FC = () => {
       if (currentSolutionIndex < solutions.length - 1) {
         setCurrentSolutionIndex(prevIndex => prevIndex + 1);
       }
-    }, 1000); // Delay in ms between showing each solution
+    }, 200); // Delay in ms between showing each solution
 
     if (currentSolutionIndex === solutions.length - 1) {
       setIsSubmitting(false);
