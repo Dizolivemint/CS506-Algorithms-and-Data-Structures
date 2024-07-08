@@ -1,29 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Polyline, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import styled, { createGlobalStyle } from 'styled-components';
+import styled from 'styled-components';
 import L from 'leaflet';
 import Loader from './components/loader';
 import Tooltip from './components/tooltip';
-
-const GlobalStyle = createGlobalStyle`
-  @import url('https://fonts.googleapis.com/css2?family=Maven+Pro:wght@400;700&family=Nunito:wght@300;400;600;700&display=swap');
-
-  body {
-    font-family: 'Nunito', sans-serif;
-    font-size: clamp(1rem, 1.5vw, 2rem);
-    
-  }
-
-  h2 {
-    font-family: 'Maven Pro', sans-serif;
-  }
-
-  label, input, button {
-    font-family: 'Nunito', sans-serif;
-    font-size: clamp(1rem, 1.5vw, 2rem);
-  }
-`;
 
 interface Solution {
   generation: number;
@@ -241,25 +222,25 @@ const Map: React.FC = () => {
     setSolutions([]);
 
     fetch(`${url}/brute?distance_matrix=${encodeURIComponent(distanceMatrixString)}`)
-        .then(response => response.json())
-        .then(parsedData => {
-            if (parsedData.total_time) {
-                setExecutionTime(parsedData.total_time);
-            }
+      .then(response => response.json())
+      .then(parsedData => {
+        if (parsedData.total_time) {
+          setExecutionTime(parsedData.total_time);
+        }
 
-            const finalSolution = {
-                route: parsedData.final_best_route,
-                distance: parsedData.final_best_distance,
-                generation: 40320,
-                fitness: 0,
-            };
+        const finalSolution = {
+          route: parsedData.final_best_route,
+          distance: parsedData.final_best_distance,
+          generation: 40320,
+          fitness: 0,
+        };
 
-            setSolutions([finalSolution]);
-            setIsSubmitting(false);
-        })
-        .catch(error => {
-            console.error("Error fetching brute force solution:", error);
-        });
+        setSolutions([finalSolution]);
+        setIsSubmitting(false);
+      })
+      .catch(error => {
+        console.error("Error fetching brute force solution:", error);
+      });
   };
 
   useEffect(() => {
@@ -286,124 +267,121 @@ const Map: React.FC = () => {
   }
 
   return (
-    <>
-      <GlobalStyle />
-      <Wrapper>
+    <Wrapper>
+      <Container>
         <Container>
-          <Container>
-            <Title>
-              <h1>Traveling Salesman Problem Visualizer</h1>
-              <Avatar src="avatar.png" alt="USA Map" style={{ width: '50px' }} />
-            </Title>
-            <img src="genetic-algorithm.webp" alt="USA Map" style={{ width: '100%' }} />
-          </Container>
-          <Container>
-            <h2>Genetic Algorithm Parameters</h2>
-            <Form onSubmit={handleSubmit}>
-              <Label>
-                Population Size:
-                <Input type="number" value={popSize} onChange={(e) => setPopSize(Number(e.target.value))} />
-                <Tooltip text="The number of individuals in the population." />
-              </Label>
-              <Label>
-                Mutation Rate:
-                <Input type="number" step="0.01" value={mutationRate} onChange={(e) => setMutationRate(Number(e.target.value))} />
-                <Tooltip text="The probability of mutating each individual." />
-              </Label>
-              <Label>
-                Crossover Rate:
-                <Input type="number" step="0.01" value={crossoverRate} onChange={(e) => setCrossoverRate(Number(e.target.value))} />
-                <Tooltip text="The probability of crossover between individuals." />
-              </Label>
-              <Label>
-                Use PMX:
-                <CustomCheckbox type="checkbox" checked={usePmx} onChange={(e) => setUsePmx(e.target.checked)} />
-                <Tooltip text="Whether to use Partially Mapped Crossover (PMX)." />
-              </Label>
-              <Label>
-                Use OX:
-                <CustomCheckbox type="checkbox" checked={useOx} onChange={(e) => setUseOx(e.target.checked)} />
-                <Tooltip text="Whether to use Order Crossover (OX)." />
-              </Label>
-              <Label>
-                Use Elitism:
-                <CustomCheckbox type="checkbox" checked={useElitism} onChange={(e) => setUseElitism(e.target.checked)} />
-                <Tooltip text="Whether to use elitism (preserve the best individual)." />
-              </Label>
-              <Label>
-                Fitness Threshold:
-                <Input type="number" value={fitnessThreshold} onChange={(e) => setFitnessThreshold(e.target.value ? Number(e.target.value) : undefined)} />
-                <Tooltip text="The fitness value at which the algorithm stops." />
-              </Label>
-              <Label>
-                No Improvement Generations:
-                <Input type="number" value={noImprovementGenerations} onChange={(e) => setNoImprovementGenerations(Number(e.target.value))} />
-                <Tooltip text="The number of generations with no improvement after which the algorithm stops." />
-              </Label>
-              {isSubmitting ? <Loader /> : (
-                <>
-                  <Button type="submit">Run Genetic Algorithm</Button>
-                  <Button type="button" onClick={handleBruteForceSubmit}>Run Brute Force</Button>
-                </>
-              )}
-            </Form>
-          </Container>
-          <Container>
-            <h2>Solutions</h2>
-            <RouteList>
-              {currentSolution && (
-                <>
-                  <h3>Genetic Route Details</h3>
-                  <p><b>Generation:</b> {currentSolution.generation}</p>
-                  {currentSolution.route.map((cityIndex, idx) => {
-                    const nextCityIndex = currentSolution.route[(idx + 1) % currentSolution.route.length];
-                    const cityName = distanceMatrixIndex[cityIndex];
-                    const nextCityName = distanceMatrixIndex[nextCityIndex];
-                    const cityMatrix = distanceMatrix[cityName];
-                    const distance = cityMatrix[distanceMatrixIndex.indexOf(nextCityName)];
-                    return (
-                      <p key={idx}><b>{cityName} to {nextCityName}:</b> {distance / 1000} km</p>
-                    );
-                  })}
-                  <p><b>Total:</b> {currentSolution.distance} km</p>
-                  <p><b>Execution Time:</b> {executionTime ? `${executionTime} ms` : 'N/A'}</p>
-                  <p><b>Note:</b> there is a delay in the display of each generation. Hence, why the execution time has completed calculating.</p>
-                </>
-              )}
-            </RouteList>
-          </Container>
+          <Title>
+            <h1>Traveling Salesman Problem Visualizer</h1>
+            <Avatar src="avatar.png" alt="USA Map" style={{ width: '50px' }} />
+          </Title>
+          <img src="genetic-algorithm.webp" alt="USA Map" style={{ width: '100%' }} />
         </Container>
-        <Container style={{ width: '100%' }}>
         <Container>
-        <MapContainer center={[39.8283, -98.5795]} zoom={5} style={{ height: '100vh', width: '95%' }}>
-          <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-          />
-          {routeCoordinates.length > 0 && (
-            <>
-              <Polyline positions={routeCoordinates} color="blue" />
-              <Marker position={routeCoordinates[0]} icon={L.divIcon({ className: 'start-marker', html: '<div style="background-color: red; width: 10px; height: 10px; border-radius: 50%;"></div>' })}>
-                <Popup>
-                  Start: New York, NY
-                </Popup>
-              </Marker>
-            </>
-          )}
-        </MapContainer>
+          <h2>Genetic Algorithm Parameters</h2>
+          <Form onSubmit={handleSubmit}>
+            <Label>
+              Population Size:
+              <Input type="number" value={popSize} onChange={(e) => setPopSize(Number(e.target.value))} />
+              <Tooltip text="The number of individuals in the population." />
+            </Label>
+            <Label>
+              Mutation Rate:
+              <Input type="number" step="0.01" value={mutationRate} onChange={(e) => setMutationRate(Number(e.target.value))} />
+              <Tooltip text="The probability of mutating each individual." />
+            </Label>
+            <Label>
+              Crossover Rate:
+              <Input type="number" step="0.01" value={crossoverRate} onChange={(e) => setCrossoverRate(Number(e.target.value))} />
+              <Tooltip text="The probability of crossover between individuals." />
+            </Label>
+            <Label>
+              Use PMX:
+              <CustomCheckbox type="checkbox" checked={usePmx} onChange={(e) => setUsePmx(e.target.checked)} />
+              <Tooltip text="Whether to use Partially Mapped Crossover (PMX)." />
+            </Label>
+            <Label>
+              Use OX:
+              <CustomCheckbox type="checkbox" checked={useOx} onChange={(e) => setUseOx(e.target.checked)} />
+              <Tooltip text="Whether to use Order Crossover (OX)." />
+            </Label>
+            <Label>
+              Use Elitism:
+              <CustomCheckbox type="checkbox" checked={useElitism} onChange={(e) => setUseElitism(e.target.checked)} />
+              <Tooltip text="Whether to use elitism (preserve the best individual)." />
+            </Label>
+            <Label>
+              Fitness Threshold:
+              <Input type="number" value={fitnessThreshold} onChange={(e) => setFitnessThreshold(e.target.value ? Number(e.target.value) : undefined)} />
+              <Tooltip text="The fitness value at which the algorithm stops." />
+            </Label>
+            <Label>
+              No Improvement Generations:
+              <Input type="number" value={noImprovementGenerations} onChange={(e) => setNoImprovementGenerations(Number(e.target.value))} />
+              <Tooltip text="The number of generations with no improvement after which the algorithm stops." />
+            </Label>
+            {isSubmitting ? <Loader /> : (
+              <>
+                <Button type="submit">Run Genetic Algorithm</Button>
+                <Button type="button" onClick={handleBruteForceSubmit}>Run Brute Force</Button>
+              </>
+            )}
+          </Form>
+        </Container>
+        <Container>
+          <h2>Solutions</h2>
+          <RouteList>
+            {currentSolution && (
+              <>
+                <h3>Genetic Route Details</h3>
+                <p><b>Generation:</b> {currentSolution.generation}</p>
+                {currentSolution.route.map((cityIndex, idx) => {
+                  const nextCityIndex = currentSolution.route[(idx + 1) % currentSolution.route.length];
+                  const cityName = distanceMatrixIndex[cityIndex];
+                  const nextCityName = distanceMatrixIndex[nextCityIndex];
+                  const cityMatrix = distanceMatrix[cityName];
+                  const distance = cityMatrix[distanceMatrixIndex.indexOf(nextCityName)];
+                  return (
+                    <p key={idx}><b>{cityName} to {nextCityName}:</b> {distance / 1000} km</p>
+                  );
+                })}
+                <p><b>Total:</b> {currentSolution.distance} km</p>
+                <p><b>Execution Time:</b> {executionTime ? `${executionTime} ms` : 'N/A'}</p>
+                <p><b>Note:</b> there is a delay in the display of each generation. Hence, why the execution time has completed calculating.</p>
+              </>
+            )}
+          </RouteList>
+        </Container>
+      </Container>
+      <Container style={{ width: '100%' }}>
+        <Container>
+          <MapContainer center={[39.8283, -98.5795]} zoom={5} style={{ height: '100vh', width: '95%' }}>
+            <TileLayer
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+            />
+            {routeCoordinates.length > 0 && (
+              <>
+                <Polyline positions={routeCoordinates} color="blue" />
+                <Marker position={routeCoordinates[0]} icon={L.divIcon({ className: 'start-marker', html: '<div style="background-color: red; width: 10px; height: 10px; border-radius: 50%;"></div>' })}>
+                  <Popup>
+                    Start: New York, NY
+                  </Popup>
+                </Marker>
+              </>
+            )}
+          </MapContainer>
         </Container>
         <Container>
           <h2>About</h2>
           <ul style={{ listStyle: "none", margin: 0 }}>
-          <li>Portfolio Project for CS506 | Algorithms and Data Structures<hr></hr></li>
-          <li>Source available on <a href="https://github.com/Dizolivemint/CS506-Algorithms-and-Data-Structures">GitHub</a><hr></hr></li>
-          <li>Consult me on your next project through <a href='https://www.linkedin.com/in/milesexner/'>LinkedIn</a><hr></hr></li>
-          <li>&copy; {year} Miles Exner. All rights reserved</li>
+            <li>Portfolio Project for CS506 | Algorithms and Data Structures<hr></hr></li>
+            <li>Source available on <a href="https://github.com/Dizolivemint/CS506-Algorithms-and-Data-Structures">GitHub</a><hr></hr></li>
+            <li>Consult me on your next project through <a href='https://www.linkedin.com/in/milesexner/'>LinkedIn</a><hr></hr></li>
+            <li>&copy; {year} Miles Exner. All rights reserved</li>
           </ul>
         </Container>
-        </Container>
-      </Wrapper>
-    </>
+      </Container>
+    </Wrapper>
   );
 };
 
