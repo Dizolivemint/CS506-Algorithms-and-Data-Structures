@@ -395,10 +395,10 @@ const Map: React.FC = () => {
         <Container>
           <h2>About</h2>
           <ul style={{ listStyle: "none", margin: 0 }}>
-          <li>Designed, built, and deployed by Miles Exner</li>
-          <li>Portfolio Project for CS506 | Algorithms and Data Structures</li>
-          <li>Source available on <a href="https://github.com/Dizolivemint/CS506-Algorithms-and-Data-Structures">GitHub</a></li>
-          <li>Copyright {year}</li>
+          <li>Portfolio Project for CS506 | Algorithms and Data Structures<hr></hr></li>
+          <li>Source available on <a href="https://github.com/Dizolivemint/CS506-Algorithms-and-Data-Structures">GitHub</a><hr></hr></li>
+          <li>Consult me on your next project through <a href='https://www.linkedin.com/in/milesexner/'>LinkedIn</a><hr></hr></li>
+          <li>&copy; {year} Miles Exner. All rights reserved</li>
           </ul>
         </Container>
         </Container>
