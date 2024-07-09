@@ -1,3 +1,5 @@
+import random
+
 CITIES = [
       "New York, NY",
       "Los Angeles, CA",
@@ -104,5 +106,9 @@ CITIES = [
 class cities_generator:
     @staticmethod
     def get_cities(num_cities):
-        return CITIES[:num_cities] 
+        # Randomize cities
+        cities = CITIES.copy()
+        random.shuffle(cities)
+        return cities[:num_cities]
+        
     
