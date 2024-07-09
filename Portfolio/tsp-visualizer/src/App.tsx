@@ -425,7 +425,7 @@ const Map: React.FC = () => {
         </Container>
         
       </Container>
-      <Container style={{ width: '30%' }}>
+      <Container style={window.innerWidth < 900 ? { width: '100%' } : { width: '30%' }}>
           <h2>Solutions</h2>
           <RouteList>
             {currentSolution && (
