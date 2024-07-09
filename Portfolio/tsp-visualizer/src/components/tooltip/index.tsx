@@ -4,7 +4,7 @@ import styled from 'styled-components';
 const TooltipContainer = styled.div`
   position: relative;
   display: inline-block;
-  margin-left: 5px;
+  margin: 0 15px;
 `;
 
 const TooltipText = styled.div<{ visible: boolean }>`
@@ -16,7 +16,7 @@ const TooltipText = styled.div<{ visible: boolean }>`
   border-radius: 6px;
   padding: 5px;
   position: absolute;
-  z-index: 1;
+  z-index: 1000;
   bottom: 100%;
   left: 50%;
   margin-left: -100px;

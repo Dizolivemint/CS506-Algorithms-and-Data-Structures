@@ -50,7 +50,7 @@ const Wrapper = styled.div`
   flex-direction: row;
   justify-content: center;
   align-items: flex-start;
-  margin: 20px;
+  gap: 10px;
 
   @media (max-width: 900px) {
     flex-direction: column;
@@ -77,14 +77,23 @@ const Title = styled.div`
 const Avatar = styled.img`
   border: 4px solid #dfdfdf;
   border-radius: 50%;
-  width: 50px;
+  width: clamp(50px, 6vw, 150px);
 `;
 
 const Container = styled.div`
   display: flex;
   flex-direction: column;
-  margin: 0 20px;
   flex-wrap: wrap;
+  @media (max-width: 900px) {
+    width: 100%;
+  }
+`;
+
+const SubContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
 `;
 
 const Form = styled.form`
@@ -92,6 +101,7 @@ const Form = styled.form`
   flex-direction: column;
   align-items: flex-start;
   margin-bottom: 20px;
+  padding-top: 1rem;
 `;
 
 const Label = styled.label`
@@ -99,7 +109,10 @@ const Label = styled.label`
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 10px;
+  justify-content: space-between;
+  position: relative;
+  min-height: 50px;
+  width: 100%;
 `;
 
 const Input = styled.input`
@@ -107,6 +120,7 @@ const Input = styled.input`
   padding: 10px;
   font: 'Nunito', sans-serif;
   font-size: clamp(1rem, 1.5vw, 2rem);
+  width: clamp(3rem, 5vw, 8rem);
 `;
 
 const Button = styled.button`
@@ -123,6 +137,14 @@ const Button = styled.button`
 
 const RouteList = styled.div`
   text-align: left;
+  display: flex;
+  flex-direction: column;
+
+  & p {
+    padding: 10px 0;
+    margin: 0;
+    border-top: 1px solid #dfdfdf;
+  }
 `;
 
 const CustomCheckbox = styled.input.attrs({ type: 'checkbox' })`
@@ -133,10 +155,37 @@ const CustomCheckbox = styled.input.attrs({ type: 'checkbox' })`
   border: 2px solid #007bff;
   border-radius: 4px;
   cursor: pointer;
-  position: relative;
+  margin: 20px 0;
 
   &:checked {
     background-color: #007bff;
+  }
+`;
+
+const Footer = styled.footer`
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid #dfdfdf;
+  padding: 20px;
+  margin-top: 20px;
+  width: 100%;
+
+  & h2 {
+    margin-bottom: 10px;
+    text-align: center;
+    border-bottom: 1px solid #dfdfdf;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+  }
+
+  & ul {
+    display: flex;
+    flex-direction: column;
+    list-style: none;
+    align-self: center;
+    margin: 0;
+    padding: 0;
+    width: clamp(300px, 50vw, 600px);
   }
 `;
 
@@ -260,6 +309,11 @@ const Map: React.FC = () => {
     return () => clearInterval(interval);
   }, [solutions, currentSolutionIndex]);
 
+  // Update map height and zoom level based on window size
+  const mapHeight = window.innerWidth < 900 ? '50vh' : '100vh';
+  const mapWidth = window.innerWidth < 900 ? '96%' : '100%';
+  const mapZoom = window.innerWidth < 500 ? 3 : window.innerWidth < 900 ? 4 : window.innerWidth < 1400 ? 3.5 : window.innerWidth < 1600 ? 4 : 4;
+
   const currentSolution = solutions[currentSolutionIndex] || solutions[solutions.length - 1];
   const routeCoordinates = currentSolution
     ? currentSolution.route.map(cityIndex => cityCoordinates[distanceMatrixIndex[cityIndex]])
@@ -271,57 +325,73 @@ const Map: React.FC = () => {
   }
 
   return (
+    <>
     <Wrapper>
       <Container>
         <Container>
           <Title>
             <h1>Traveling Salesman Problem Visualizer</h1>
-            <Avatar src="avatar.png" alt="USA Map" style={{ width: '50px' }} />
+            <Avatar src="avatar.png" alt="Portrait of Miles Exner"/>
           </Title>
-          <img src="genetic-algorithm.webp" alt="USA Map" style={{ width: '100%' }} />
         </Container>
         <Container>
           <h2>Genetic Algorithm Parameters</h2>
           <Form onSubmit={handleSubmit}>
             <Label>
               Population Size:
-              <Input type="number" value={popSize} onChange={(e) => setPopSize(Number(e.target.value))} />
-              <Tooltip text="The number of individuals in the population." />
+              <SubContainer>
+                <Input type="number" value={popSize} onChange={(e) => setPopSize(Number(e.target.value))} />
+                <Tooltip text="The number of individuals in the population." />
+              </SubContainer>
             </Label>
             <Label>
               Mutation Rate:
-              <Input type="number" step="0.01" value={mutationRate} onChange={(e) => setMutationRate(Number(e.target.value))} />
-              <Tooltip text="The probability of mutating each individual." />
+              <SubContainer>
+                <Input type="number" step="0.01" value={mutationRate} onChange={(e) => setMutationRate(Number(e.target.value))} />
+                <Tooltip text="The probability of mutating each individual." />
+              </SubContainer>
             </Label>
             <Label>
               Crossover Rate:
-              <Input type="number" step="0.01" value={crossoverRate} onChange={(e) => setCrossoverRate(Number(e.target.value))} />
-              <Tooltip text="The probability of crossover between individuals." />
+              <SubContainer>
+                <Input type="number" step="0.01" value={crossoverRate} onChange={(e) => setCrossoverRate(Number(e.target.value))} />
+                <Tooltip text="The probability of crossover between individuals." />
+              </SubContainer>
             </Label>
             <Label>
               Use PMX:
-              <CustomCheckbox type="checkbox" checked={usePmx} onChange={(e) => setUsePmx(e.target.checked)} />
-              <Tooltip text="Whether to use Partially Mapped Crossover (PMX)." />
+              <SubContainer>
+                <CustomCheckbox type="checkbox" checked={usePmx} onChange={(e) => setUsePmx(e.target.checked)} />
+                <Tooltip text="Whether to use Partially Mapped Crossover (PMX)." />
+              </SubContainer>
             </Label>
             <Label>
               Use OX:
-              <CustomCheckbox type="checkbox" checked={useOx} onChange={(e) => setUseOx(e.target.checked)} />
-              <Tooltip text="Whether to use Order Crossover (OX)." />
+              <SubContainer>
+                <CustomCheckbox type="checkbox" checked={useOx} onChange={(e) => setUseOx(e.target.checked)} />
+                <Tooltip text="Whether to use Order Crossover (OX)." />
+              </SubContainer>
             </Label>
             <Label>
               Use Elitism:
-              <CustomCheckbox type="checkbox" checked={useElitism} onChange={(e) => setUseElitism(e.target.checked)} />
-              <Tooltip text="Whether to use elitism (preserve the best individual)." />
+              <SubContainer>
+                <CustomCheckbox type="checkbox" checked={useElitism} onChange={(e) => setUseElitism(e.target.checked)} />
+                <Tooltip text="Whether to use elitism (preserve the best individual)." />
+              </SubContainer>
             </Label>
             <Label>
               Fitness Threshold:
-              <Input type="number" value={fitnessThreshold} onChange={(e) => setFitnessThreshold(e.target.value ? Number(e.target.value) : undefined)} />
-              <Tooltip text="The fitness value at which the algorithm stops." />
+              <SubContainer>
+                <Input type="number" value={fitnessThreshold} onChange={(e) => setFitnessThreshold(e.target.value ? Number(e.target.value) : undefined)} />
+                <Tooltip text="The fitness value at which the algorithm stops." />
+              </SubContainer>
             </Label>
             <Label>
               No Improvement Generations:
-              <Input type="number" value={noImprovementGenerations} onChange={(e) => setNoImprovementGenerations(Number(e.target.value))} />
-              <Tooltip text="The number of generations with no improvement after which the algorithm stops." />
+              <SubContainer>
+                <Input type="number" value={noImprovementGenerations} onChange={(e) => setNoImprovementGenerations(Number(e.target.value))} />
+                <Tooltip text="The number of generations with no improvement after which the algorithm stops." />
+              </SubContainer>
             </Label>
             {isSubmitting ? <Loader /> : (
               <>
@@ -331,34 +401,12 @@ const Map: React.FC = () => {
             )}
           </Form>
         </Container>
-        <Container>
-          <h2>Solutions</h2>
-          <RouteList>
-            {currentSolution && (
-              <>
-                <h3>Genetic Route Details</h3>
-                <p><b>Generation:</b> {currentSolution.generation}</p>
-                {currentSolution.route.map((cityIndex, idx) => {
-                  const nextCityIndex = currentSolution.route[(idx + 1) % currentSolution.route.length];
-                  const cityName = distanceMatrixIndex[cityIndex];
-                  const nextCityName = distanceMatrixIndex[nextCityIndex];
-                  const cityMatrix = distanceMatrix[cityName];
-                  const distance = cityMatrix[distanceMatrixIndex.indexOf(nextCityName)];
-                  return (
-                    <p key={idx}><b>{cityName} to {nextCityName}:</b> {distance / 1000} km</p>
-                  );
-                })}
-                <p><b>Total:</b> {currentSolution.distance} km</p>
-                <p><b>Execution Time:</b> {executionTime ? `${executionTime} ms` : 'N/A'}</p>
-                <p><b>Note:</b> there is a delay in the display of each generation. Hence, why the execution time has completed calculating.</p>
-              </>
-            )}
-          </RouteList>
-        </Container>
       </Container>
+      
       <Container style={{ width: '100%' }}>
+        
         <Container>
-          <MapContainer center={[39.8283, -98.5795]} zoom={5} style={{ height: '100vh', width: '95%' }}>
+          <MapContainer center={[39.8283, -98.5795]} zoom={mapZoom} style={{ height: mapHeight, width: mapWidth }}>
             <TileLayer
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
@@ -375,7 +423,32 @@ const Map: React.FC = () => {
             )}
           </MapContainer>
         </Container>
-        <Container>
+        
+      </Container>
+      <Container style={{ width: '30%' }}>
+          <h2>Solutions</h2>
+          <RouteList>
+            {currentSolution && (
+              <>
+                <p><b>Generation:</b> {currentSolution.generation}</p>
+                {currentSolution.route.map((cityIndex, idx) => {
+                  const nextCityIndex = currentSolution.route[(idx + 1) % currentSolution.route.length];
+                  const cityName = distanceMatrixIndex[cityIndex];
+                  const nextCityName = distanceMatrixIndex[nextCityIndex];
+                  const cityMatrix = distanceMatrix[cityName];
+                  const distance = cityMatrix[distanceMatrixIndex.indexOf(nextCityName)];
+                  return (
+                    <p key={idx}><b>{cityName} to {nextCityName}:</b> {distance / 1000} km</p>
+                  );
+                })}
+                <p><b>Total:</b> {currentSolution.distance} km</p>
+                <p><b>Execution Time:</b> {executionTime ? `${executionTime} ms` : 'N/A'}</p>
+              </>
+            )}
+          </RouteList>
+        </Container>
+    </Wrapper>
+    <Footer>
           <h2>About</h2>
           <ul style={{ listStyle: "none", margin: 0 }}>
             <li>Portfolio Project for CS506 | Algorithms and Data Structures<hr></hr></li>
@@ -383,9 +456,8 @@ const Map: React.FC = () => {
             <li>Consult me on your next project through <a href='https://www.linkedin.com/in/milesexner/'>LinkedIn</a><hr></hr></li>
             <li>&copy; {year} Miles Exner. All rights reserved</li>
           </ul>
-        </Container>
-      </Container>
-    </Wrapper>
+        </Footer>
+    </>
   );
 };
 
