@@ -192,20 +192,20 @@ const Footer = styled.footer`
 const Map: React.FC = () => {
   const [solutions, setSolutions] = useState<Solution[]>([]);
   const [currentSolutionIndex, setCurrentSolutionIndex] = useState(0);
-  const [popSize, setPopSize] = useState(100);
+  const [popSize, setPopSize] = useState(200);
   const [mutationRate, setMutationRate] = useState(0.01);
   const [crossoverRate, setCrossoverRate] = useState(0.7);
-  const [usePmx, setUsePmx] = useState(false);
+  const [usePmx, setUsePmx] = useState(true);
   const [useOx, setUseOx] = useState(true);
-  const [useAco, setUseAco] = useState(false);
+  const [useAco, setUseAco] = useState(true);
   const [useSa, setUseSa] = useState(false);
   const [initialTemp, setInitialTemp] = useState<number | undefined>(1000);
   const [coolingRate, setCoolingRate] = useState<number | undefined>(0.995);
   const [iterations, setIterations] = useState<number | undefined>(10000);
   const [pheromoneThreshold, setPheromoneThreshold] = useState<number | undefined>(5);
-  const [useElitism, setUseElitism] = useState(false);
+  const [useElitism, setUseElitism] = useState(true);
   const [fitnessThreshold, setFitnessThreshold] = useState<number | undefined>(undefined);
-  const [noImprovementGenerations, setNoImprovementGenerations] = useState(20);
+  const [noImprovementGenerations, setNoImprovementGenerations] = useState(10);
   const [executionTime, setExecutionTime] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
