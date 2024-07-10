@@ -223,7 +223,7 @@ const Map: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     setIsSubmitting(true);
-    setSolutions([]);
+
     e.preventDefault();
     const formData = new FormData();
     formData.append('file', new Blob(blob, { type: 'text/csv' }));
@@ -290,7 +290,7 @@ const Map: React.FC = () => {
           fitness: 0,
         };
 
-        setSolutions([finalSolution]);
+        setSolutions(prevSolutions => [...prevSolutions, finalSolution]);
         setIsSubmitting(false);
       })
       .catch(error => {

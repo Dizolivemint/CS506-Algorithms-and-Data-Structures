@@ -28,7 +28,7 @@ def convert_to_serializable(obj):
         return [convert_to_serializable(i) for i in obj]
     return obj
 
-def stream_solutions(distance_matrix, pop_size, mutation_rate, crossover_rate, use_pmx, use_ox, use_elitism, fitness_threshold, no_improvement_generations, use_aco, pheromone_threshold):
+def stream_solutions(distance_matrix, pop_size, mutation_rate, crossover_rate, use_pmx, use_ox, use_elitism, fitness_threshold, no_improvement_generations, use_aco, pheromone_threshold, use_sa, sa_initial_temp, sa_cooling_rate, sa_num_iterations):
     def generate():
         start_time = time.time()
 
@@ -43,7 +43,11 @@ def stream_solutions(distance_matrix, pop_size, mutation_rate, crossover_rate, u
             fitness_threshold=fitness_threshold,
             no_improvement_generations=no_improvement_generations,
             use_aco=use_aco,
-            pheromone_threshold=pheromone_threshold
+            pheromone_threshold=pheromone_threshold,
+            use_sa=use_sa,
+            sa_cooling_rate=sa_cooling_rate,
+            sa_initial_temp=sa_initial_temp,
+            sa_num_iterations=sa_num_iterations
         ):
             serializable_solution = {k: convert_to_serializable(v) for k, v in solution.items()}
             yield f"data: {json.dumps(serializable_solution)}\n\n"
@@ -93,8 +97,12 @@ def run_ga():
     no_improvement_generations = int(data.get('no_improvement_generations', 20))
     use_aco = data.get('use_aco', 'false').lower() == 'true'
     pheromone_threshold = float(data.get('pheromone_threshold', 5))
+    use_sa = data.get('use_sa', 'false').lower() == 'true'
+    sa_initial_temp = float(data.get('sa_initial_temp', 1000))
+    sa_cooling_rate = float(data.get('sa_cooling_rate', 0.995))
+    sa_num_iterations = int(data.get('sa_num_iterations', 1000))
 
-    return stream_solutions(distance_matrix, pop_size, mutation_rate, crossover_rate, use_pmx, use_ox, use_elitism, fitness_threshold, no_improvement_generations, use_aco, pheromone_threshold)
+    return stream_solutions(distance_matrix, pop_size, mutation_rate, crossover_rate, use_pmx, use_ox, use_elitism, fitness_threshold, no_improvement_generations, use_aco, pheromone_threshold, use_sa, sa_initial_temp, sa_cooling_rate, sa_num_iterations)
 
 @app.route('/stream-solutions', methods=['GET'])
 def stream_solutions_endpoint():
