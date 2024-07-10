@@ -4,7 +4,6 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { createGlobalStyle, ThemeProvider } from 'styled-components';
-import Head from './components/head';
 
 const GlobalStyle = createGlobalStyle`
   body {
@@ -28,7 +27,6 @@ const root = ReactDOM.createRoot(
 );
 root.render(
   <React.StrictMode>
-    <Head />
     <ThemeProvider theme={{}}>
       <GlobalStyle />
       <App />
