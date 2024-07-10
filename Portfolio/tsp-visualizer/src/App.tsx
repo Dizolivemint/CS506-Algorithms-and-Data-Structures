@@ -197,6 +197,8 @@ const Map: React.FC = () => {
   const [crossoverRate, setCrossoverRate] = useState(0.7);
   const [usePmx, setUsePmx] = useState(false);
   const [useOx, setUseOx] = useState(true);
+  const [useAco, setUseAco] = useState(false);
+  const [pheromoneThreshold, setPheromoneThreshold] = useState<number | undefined>(undefined);
   const [useElitism, setUseElitism] = useState(false);
   const [fitnessThreshold, setFitnessThreshold] = useState<number | undefined>(undefined);
   const [noImprovementGenerations, setNoImprovementGenerations] = useState(20);
@@ -221,7 +223,7 @@ const Map: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     setIsSubmitting(true);
-
+    setSolutions([]);
     e.preventDefault();
     const formData = new FormData();
     formData.append('file', new Blob(blob, { type: 'text/csv' }));
@@ -393,6 +395,22 @@ const Map: React.FC = () => {
                 <Tooltip text="The number of generations with no improvement after which the algorithm stops." />
               </SubContainer>
             </Label>
+            <Label>
+              Ant Colony Optimization:
+              <SubContainer>
+                <CustomCheckbox type="checkbox" checked={useAco} onChange={(e) => setUseAco(e.target.checked)} />
+                <Tooltip text="Whether to use Ant Colony Optimization." />
+              </SubContainer>
+            </Label>
+            {useAco && (
+              <Label>
+                Pheromone Threshold:
+                <SubContainer>
+                  <Input type="number" min={1} max={10} step={1} value={pheromoneThreshold} onChange={(e) => setPheromoneThreshold(e.target.value ? Number(e.target.value) : undefined)} />
+                  <Tooltip text="The pheromone value at which the algorithm stops." />
+                </SubContainer>
+              </Label>
+            )}
             {isSubmitting ? <Loader /> : (
               <>
                 <Button type="submit">Run Genetic Algorithm</Button>

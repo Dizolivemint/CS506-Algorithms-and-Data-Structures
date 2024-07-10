@@ -28,7 +28,7 @@ def convert_to_serializable(obj):
         return [convert_to_serializable(i) for i in obj]
     return obj
 
-def stream_solutions(distance_matrix, pop_size, mutation_rate, crossover_rate, use_pmx, use_ox, use_elitism, fitness_threshold, no_improvement_generations):
+def stream_solutions(distance_matrix, pop_size, mutation_rate, crossover_rate, use_pmx, use_ox, use_elitism, fitness_threshold, no_improvement_generations, use_aco, pheromone_threshold):
     def generate():
         start_time = time.time()
 
@@ -41,7 +41,9 @@ def stream_solutions(distance_matrix, pop_size, mutation_rate, crossover_rate, u
             use_ox=use_ox, 
             use_elitism=use_elitism,
             fitness_threshold=fitness_threshold,
-            no_improvement_generations=no_improvement_generations
+            no_improvement_generations=no_improvement_generations,
+            use_aco=use_aco,
+            pheromone_threshold=pheromone_threshold
         ):
             serializable_solution = {k: convert_to_serializable(v) for k, v in solution.items()}
             yield f"data: {json.dumps(serializable_solution)}\n\n"
@@ -89,8 +91,10 @@ def run_ga():
     use_elitism = data.get('use_elitism', 'false').lower() == 'true'
     fitness_threshold = float(data.get('fitness_threshold')) if data.get('fitness_threshold') else None
     no_improvement_generations = int(data.get('no_improvement_generations', 20))
+    use_aco = data.get('use_aco', 'false').lower() == 'true'
+    pheromone_threshold = float(data.get('pheromone_threshold', 5))
 
-    return stream_solutions(distance_matrix, pop_size, mutation_rate, crossover_rate, use_pmx, use_ox, use_elitism, fitness_threshold, no_improvement_generations)
+    return stream_solutions(distance_matrix, pop_size, mutation_rate, crossover_rate, use_pmx, use_ox, use_elitism, fitness_threshold, no_improvement_generations, use_aco, pheromone_threshold)
 
 @app.route('/stream-solutions', methods=['GET'])
 def stream_solutions_endpoint():

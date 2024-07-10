@@ -7,13 +7,25 @@ from genetic_algorithm.select_parents import select_parents
 from genetic_algorithm.pmx_crossover import pmx_crossover
 from genetic_algorithm.ox_crossover import ox_crossover
 from genetic_algorithm.mutate import mutate
+from optimizations.ant_colony_optimization import initialize_pheromones, update_pheromones, adjust_mutation_rate
+from optimizations.simulated_annealing import simulated_annealing
 
 def calculate_total_distance(route, distance_matrix):
     distance = np.sum([distance_matrix[route[i - 1], route[i]] for i in range(len(route))])
     distance += distance_matrix[route[-1], route[0]]  # Add distance to return to the start city
     return distance
 
-def genetic_algorithm(distance_matrix, pop_size, mutation_rate, crossover_rate, use_pmx, use_ox, use_elitism, fitness_threshold, no_improvement_generations):
+def process_aco_child(child, pheromones, mutation_rate, pheromone_threshold):
+    mutation_rate = adjust_mutation_rate(child, pheromones, mutation_rate, pheromone_threshold)
+    return mutate(child, mutation_rate)
+
+def is_unique_route(route, population):
+    for existing_route in population:
+        if np.array_equal(route, existing_route):
+            return False
+    return True
+  
+def genetic_algorithm(distance_matrix, pop_size, mutation_rate, crossover_rate, use_pmx, use_ox, use_elitism, fitness_threshold, no_improvement_generations, use_aco=False, pheromone_threshold=5, use_sa=False, sa_initial_temp=1000, sa_cooling_rate=0.995, sa_num_iterations=1000):
     num_cities = len(distance_matrix)
     start_city = 0  # Assuming "New York, NY" is the first city in the distance matrix
     
@@ -26,6 +38,9 @@ def genetic_algorithm(distance_matrix, pop_size, mutation_rate, crossover_rate, 
     best_fitness = float('-inf')
     best_distance = float('inf')
     generations_no_improvement = 0
+    
+    # Initialize pheromones
+    pheromones = initialize_pheromones(num_cities) if use_aco else None
 
     def parallel_fitness(route):
         return calculate_fitness(route, distance_matrix)
@@ -49,6 +64,10 @@ def genetic_algorithm(distance_matrix, pop_size, mutation_rate, crossover_rate, 
             generations_no_improvement = 0
         else:
             generations_no_improvement += 1
+            
+        # Apply simulated annealing to refine the best route found so far
+        if use_sa:
+          best_route, best_distance = simulated_annealing(best_route, distance_matrix, sa_initial_temp, sa_cooling_rate, sa_num_iterations)
 
         yield {
             'generation': generation,
@@ -81,8 +100,12 @@ def genetic_algorithm(distance_matrix, pop_size, mutation_rate, crossover_rate, 
             else:
                 child1, child2 = parents[i][1:-1], parents[i+1][1:-1]
 
-            child1 = mutate(child1, mutation_rate)
-            child2 = mutate(child2, mutation_rate)
+            if use_aco:
+                child1 = process_aco_child(child1, pheromones, mutation_rate, pheromone_threshold)
+                child2 = process_aco_child(child2, pheromones, mutation_rate, pheromone_threshold)
+            else:
+                child1 = mutate(child1, mutation_rate)
+                child2 = mutate(child2, mutation_rate)
 
             child1 = np.insert(child1, 0, start_city)
             child1 = np.append(child1, start_city)
@@ -101,3 +124,6 @@ def genetic_algorithm(distance_matrix, pop_size, mutation_rate, crossover_rate, 
         ]
 
         population = next_population
+        
+        if use_aco:
+          update_pheromones(pheromones, population, fitness_scores)
