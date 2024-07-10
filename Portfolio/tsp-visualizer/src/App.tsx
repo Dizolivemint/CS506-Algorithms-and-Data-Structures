@@ -198,7 +198,11 @@ const Map: React.FC = () => {
   const [usePmx, setUsePmx] = useState(false);
   const [useOx, setUseOx] = useState(true);
   const [useAco, setUseAco] = useState(false);
-  const [pheromoneThreshold, setPheromoneThreshold] = useState<number | undefined>(undefined);
+  const [useSa, setUseSa] = useState(false);
+  const [initialTemp, setInitialTemp] = useState<number | undefined>(1000);
+  const [coolingRate, setCoolingRate] = useState<number | undefined>(0.995);
+  const [iterations, setIterations] = useState<number | undefined>(10000);
+  const [pheromoneThreshold, setPheromoneThreshold] = useState<number | undefined>(5);
   const [useElitism, setUseElitism] = useState(false);
   const [fitnessThreshold, setFitnessThreshold] = useState<number | undefined>(undefined);
   const [noImprovementGenerations, setNoImprovementGenerations] = useState(20);
@@ -410,6 +414,38 @@ const Map: React.FC = () => {
                   <Tooltip text="The pheromone value at which the algorithm stops." />
                 </SubContainer>
               </Label>
+            )}
+            <Label>
+              Simulated Annealing:
+              <SubContainer>
+                <CustomCheckbox type="checkbox" checked={useSa} onChange={(e) => setUseSa(e.target.checked)} />
+                <Tooltip text="Whether to use Simulated Annealing." />
+              </SubContainer>
+            </Label>
+            {useSa && (
+            <>
+              <Label>
+                Initial Temperature:
+                <SubContainer>
+                  <Input type="number" min={500} max={5000} step={100} value={initialTemp} onChange={(e) => setInitialTemp(e.target.value ? Number(e.target.value) : undefined)} />
+                  <Tooltip text="The initial temperature for the annealing process." />
+                </SubContainer>
+              </Label>
+              <Label>
+                Cooling Rate:
+                <SubContainer>
+                  <Input type="number" min={0.9} max={0.999} step={0.001} value={coolingRate} onChange={(e) => setCoolingRate(e.target.value ? Number(e.target.value) : undefined)} />
+                  <Tooltip text="The rate at which the temperature decreases." />
+                </SubContainer>
+              </Label>
+              <Label>
+                Iterations:
+                <SubContainer>
+                  <Input type="number" min={1000} max={10000} step={100} value={iterations} onChange={(e) => setIterations(e.target.value ? Number(e.target.value) : undefined)} />
+                  <Tooltip text="The number of iterations for the annealing process." />
+                </SubContainer>
+              </Label>
+            </>
             )}
             {isSubmitting ? <Loader /> : (
               <>
