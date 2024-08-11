@@ -155,17 +155,22 @@ def brute_force_tsp():
     
     return jsonify(serializable_solution)
 
-@app.route('/best-first-search', methods=['POST'])
+@app.route('/best-first-search', methods=['GET'])
 def run_best_first_search():
-    data = request.form.to_dict()
-    file = request.files['file']
-    df = pd.read_csv(io.StringIO(file.read().decode('utf-8')), index_col=0)
+    # Decode the distance matrix from the query string
+    distance_matrix_str = request.args.get('distance_matrix')
     
-    # Drop the first column (city names) if necessary
-    if df.columns[0] != 0:
-        df = df.drop(columns=df.columns[0])
+    if not distance_matrix_str:
+        return "Missing distance matrix", 400
     
-    distance_matrix = df.to_numpy().astype(float) / 1000  # Convert distances from meters to kilometers
+    try:
+        # Decode the string to a list of lists
+        distance_matrix = np.array(json.loads(distance_matrix_str)).astype(float)
+    except (ValueError, TypeError) as e:
+        return f"Invalid distance matrix format: {str(e)}", 400
+    
+    # Convert distances from meters to kilometers
+    distance_matrix /= 1000
     
     if np.any(np.isnan(distance_matrix)) or np.any(distance_matrix < 0):
         return "Distance matrix contains invalid values.", 400
@@ -173,14 +178,21 @@ def run_best_first_search():
     np.fill_diagonal(distance_matrix, 0)
     if np.any((distance_matrix == 0) & (np.eye(len(distance_matrix)) == 0)):
         return "Distance matrix contains zero values off the diagonal.", 400
-    
-    start_city = int(data.get('start_city', 0))
+
+    # Optional start_city parameter with a default of 0
+    start_city = int(request.args.get('start_city', 0))
     
     def generate():
+        start_time = time.time()
+        
         for result in best_first_search_stream(distance_matrix, start_city):
             serializable_result = convert_to_serializable(result)
             yield f"data: {json.dumps(serializable_result)}\n\n"
-    
+        
+        end_time = time.time()
+        total_time = end_time - start_time
+        yield f"data: {json.dumps({'total_time': total_time})}\n\n"
+
     return Response(generate(), mimetype='text/event-stream')
   
 if __name__ == '__main__':

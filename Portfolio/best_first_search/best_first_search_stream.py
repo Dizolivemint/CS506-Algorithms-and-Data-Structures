@@ -11,8 +11,10 @@ def best_first_search_stream(distance_matrix, start_city=0):
     
     best_route = None
     best_distance = float('inf')
-    
+    generation = 0  # Start generation counter
+
     while heap:
+        generation += 1
         current_cost, current_path = heapq.heappop(heap)
         current_city = current_path[-1]
         
@@ -23,8 +25,10 @@ def best_first_search_stream(distance_matrix, start_city=0):
                 best_distance = total_cost
                 best_route = current_path + [start_city]
                 yield {
-                    'current_path': best_route,
-                    'current_cost': best_distance
+                    'generation': generation,
+                    'route': best_route,
+                    'distance': best_distance,
+                    'fitness': 1 / best_distance if best_distance > 0 else float('inf')
                 }
             continue
         
@@ -34,7 +38,10 @@ def best_first_search_stream(distance_matrix, start_city=0):
                 heapq.heappush(heap, (new_cost, current_path + [next_city]))
 
     if best_route:
+        # Final best result
         yield {
-            'final_best_route': best_route,
-            'final_best_distance': best_distance
+            'generation': generation,
+            'route': best_route,
+            'distance': best_distance,
+            'fitness': 1 / best_distance if best_distance > 0 else float('inf')
         }
