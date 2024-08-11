@@ -327,6 +327,43 @@ const Map: React.FC = () => {
     });
   };
 
+  const handleAStarSearchSubmit = () => {
+    setIsSubmitting(true);
+    const distanceMatrixString = JSON.stringify(Object.values(distanceMatrix));
+    setSolutions([]);
+
+    fetch(`${url}/a-star-search?distance_matrix=${encodeURIComponent(distanceMatrixString)}`)
+    .then(response => {
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder("utf-8");
+
+      if (reader) {
+        (function read() {
+          reader.read().then(({ done, value }) => {
+            if (done) {
+              return;
+            }
+            const text = decoder.decode(value);
+            const events = text.split("\n\n").filter(Boolean);
+
+            events.forEach(event => {
+              const data = event.replace(/^data: /, '');
+              const parsedData = JSON.parse(data);
+              if (parsedData.total_time) {
+                setExecutionTime(parsedData.total_time);
+              } else {
+                const solution: Solution = parsedData;
+                setSolutions(prevSolutions => [...prevSolutions, solution]);
+              }
+            });
+
+            read();
+          });
+        })();
+      }
+    });
+  };
+
   const handleBruteForceSubmit = () => {
     setIsSubmitting(true);
     const distanceMatrixString = JSON.stringify(Object.values(distanceMatrix));
@@ -511,6 +548,7 @@ const Map: React.FC = () => {
           </Collapse>
           {isSubmitting ? <Loader /> : (
                 <>
+                  <Button type="button" onClick={handleBestFirstSearchSubmit}>A Star Search</Button>
                   <Button type="button" onClick={handleBestFirstSearchSubmit}>Best First Search</Button>
                   <Button type="button" onClick={handleBruteForceSubmit}>Brute Force</Button>
                 </>

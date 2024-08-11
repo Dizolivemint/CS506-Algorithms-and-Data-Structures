@@ -5,6 +5,7 @@ import numpy as np
 import json
 from genetic_algorithm.genetic_algorithm import genetic_algorithm
 from best_first_search.best_first_search_stream import best_first_search_stream
+from a_star_search.a_star_search_stream import a_star_search_stream
 import io
 import time
 import itertools
@@ -186,6 +187,46 @@ def run_best_first_search():
         start_time = time.time()
         
         for result in best_first_search_stream(distance_matrix, start_city):
+            serializable_result = convert_to_serializable(result)
+            yield f"data: {json.dumps(serializable_result)}\n\n"
+        
+        end_time = time.time()
+        total_time = end_time - start_time
+        yield f"data: {json.dumps({'total_time': total_time})}\n\n"
+
+    return Response(generate(), mimetype='text/event-stream')
+  
+@app.route('/a-star-search', methods=['GET'])
+def run_a_star_search():
+    # Decode the distance matrix from the query string
+    distance_matrix_str = request.args.get('distance_matrix')
+    
+    if not distance_matrix_str:
+        return "Missing distance matrix", 400
+    
+    try:
+        # Decode the string to a list of lists
+        distance_matrix = np.array(json.loads(distance_matrix_str)).astype(float)
+    except (ValueError, TypeError) as e:
+        return f"Invalid distance matrix format: {str(e)}", 400
+    
+    # Convert distances from meters to kilometers
+    distance_matrix /= 1000
+    
+    if np.any(np.isnan(distance_matrix)) or np.any(distance_matrix < 0):
+        return "Distance matrix contains invalid values.", 400
+    
+    np.fill_diagonal(distance_matrix, 0)
+    if np.any((distance_matrix == 0) & (np.eye(len(distance_matrix)) == 0)):
+        return "Distance matrix contains zero values off the diagonal.", 400
+
+    # Optional start_city parameter with a default of 0
+    start_city = int(request.args.get('start_city', 0))
+    
+    def generate():
+        start_time = time.time()
+        
+        for result in a_star_search_stream(distance_matrix, start_city):
             serializable_result = convert_to_serializable(result)
             yield f"data: {json.dumps(serializable_result)}\n\n"
         
