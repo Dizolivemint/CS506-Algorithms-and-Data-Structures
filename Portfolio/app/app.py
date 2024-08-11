@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import json
 from genetic_algorithm.genetic_algorithm import genetic_algorithm
+from best_first_search.best_first_search_stream import best_first_search_stream
 import io
 import time
 import itertools
@@ -153,6 +154,34 @@ def brute_force_tsp():
     serializable_solution = convert_to_serializable(best_solution)
     
     return jsonify(serializable_solution)
+
+@app.route('/best-first-search', methods=['POST'])
+def run_best_first_search():
+    data = request.form.to_dict()
+    file = request.files['file']
+    df = pd.read_csv(io.StringIO(file.read().decode('utf-8')), index_col=0)
+    
+    # Drop the first column (city names) if necessary
+    if df.columns[0] != 0:
+        df = df.drop(columns=df.columns[0])
+    
+    distance_matrix = df.to_numpy().astype(float) / 1000  # Convert distances from meters to kilometers
+    
+    if np.any(np.isnan(distance_matrix)) or np.any(distance_matrix < 0):
+        return "Distance matrix contains invalid values.", 400
+    
+    np.fill_diagonal(distance_matrix, 0)
+    if np.any((distance_matrix == 0) & (np.eye(len(distance_matrix)) == 0)):
+        return "Distance matrix contains zero values off the diagonal.", 400
+    
+    start_city = int(data.get('start_city', 0))
+    
+    def generate():
+        for result in best_first_search_stream(distance_matrix, start_city):
+            serializable_result = convert_to_serializable(result)
+            yield f"data: {json.dumps(serializable_result)}\n\n"
+    
+    return Response(generate(), mimetype='text/event-stream')
   
 if __name__ == '__main__':
     # Check if the app is running on Render
