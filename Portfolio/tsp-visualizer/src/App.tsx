@@ -5,6 +5,7 @@ import styled from 'styled-components';
 import L from 'leaflet';
 import Loader from './components/loader';
 import Tooltip from './components/tooltip';
+import { Collapse } from 'react-collapse';
 
 interface Solution {
   generation: number;
@@ -135,6 +136,19 @@ const Button = styled.button`
   font-size: clamp(1rem, 1.5vw, 2rem);
 `;
 
+const AccordionButton = styled.button`
+  width: 100%;
+  text-align: center;
+  padding: 10px;
+  border: none;
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+  font: 'Nunito', sans-serif;
+  font-size: clamp(1rem, 1.5vw, 2rem);
+  border-radius: 5px
+`;
+
 const RouteList = styled.div`
   text-align: left;
   display: flex;
@@ -208,6 +222,7 @@ const Map: React.FC = () => {
   const [noImprovementGenerations, setNoImprovementGenerations] = useState(10);
   const [executionTime, setExecutionTime] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAccordionOpen, setIsAccordionOpen] = useState(false);
 
   const blob = [`,"New York, NY","Los Angeles, CA","Chicago, IL","Houston, TX","Phoenix, AZ","Philadelphia, PA","San Antonio, TX","San Diego, CA","Dallas, TX","San Jose, CA"
     "New York, NY",0,4488604,1271038,2617854,3872715,151753,2931721,4440447,2489493,4721507
@@ -275,6 +290,43 @@ const Map: React.FC = () => {
       });
   };
 
+  const handleBestFirstSearchSubmit = () => {
+    setIsSubmitting(true);
+    const distanceMatrixString = JSON.stringify(Object.values(distanceMatrix));
+    setSolutions([]);
+
+    fetch(`${url}/best-first-search?distance_matrix=${encodeURIComponent(distanceMatrixString)}`)
+    .then(response => {
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder("utf-8");
+
+      if (reader) {
+        (function read() {
+          reader.read().then(({ done, value }) => {
+            if (done) {
+              return;
+            }
+            const text = decoder.decode(value);
+            const events = text.split("\n\n").filter(Boolean);
+
+            events.forEach(event => {
+              const data = event.replace(/^data: /, '');
+              const parsedData = JSON.parse(data);
+              if (parsedData.total_time) {
+                setExecutionTime(parsedData.total_time);
+              } else {
+                const solution: Solution = parsedData;
+                setSolutions(prevSolutions => [...prevSolutions, solution]);
+              }
+            });
+
+            read();
+          });
+        })();
+      }
+    });
+  };
+
   const handleBruteForceSubmit = () => {
     setIsSubmitting(true);
     const distanceMatrixString = JSON.stringify(Object.values(distanceMatrix));
@@ -290,7 +342,7 @@ const Map: React.FC = () => {
         const finalSolution = {
           route: parsedData.final_best_route,
           distance: parsedData.final_best_distance,
-          generation: 40320,
+          generation: 3628800,
           fitness: 0,
         };
 
@@ -341,119 +393,128 @@ const Map: React.FC = () => {
           </Title>
         </Container>
         <Container>
-          <h2>Genetic Algorithm Parameters</h2>
-          <Form onSubmit={handleSubmit}>
-            <Label>
-              Population Size:
-              <SubContainer>
-                <Input type="number" value={popSize} onChange={(e) => setPopSize(Number(e.target.value))} />
-                <Tooltip text="The number of individuals in the population." />
-              </SubContainer>
-            </Label>
-            <Label>
-              Mutation Rate:
-              <SubContainer>
-                <Input type="number" step="0.01" value={mutationRate} onChange={(e) => setMutationRate(Number(e.target.value))} />
-                <Tooltip text="The probability of mutating each individual." />
-              </SubContainer>
-            </Label>
-            <Label>
-              Crossover Rate:
-              <SubContainer>
-                <Input type="number" step="0.01" value={crossoverRate} onChange={(e) => setCrossoverRate(Number(e.target.value))} />
-                <Tooltip text="The probability of crossover between individuals." />
-              </SubContainer>
-            </Label>
-            <Label>
-              Use PMX:
-              <SubContainer>
-                <CustomCheckbox type="checkbox" checked={usePmx} onChange={(e) => setUsePmx(e.target.checked)} />
-                <Tooltip text="Whether to use Partially Mapped Crossover (PMX)." />
-              </SubContainer>
-            </Label>
-            <Label>
-              Use OX:
-              <SubContainer>
-                <CustomCheckbox type="checkbox" checked={useOx} onChange={(e) => setUseOx(e.target.checked)} />
-                <Tooltip text="Whether to use Order Crossover (OX)." />
-              </SubContainer>
-            </Label>
-            <Label>
-              Use Elitism:
-              <SubContainer>
-                <CustomCheckbox type="checkbox" checked={useElitism} onChange={(e) => setUseElitism(e.target.checked)} />
-                <Tooltip text="Whether to use elitism (preserve the best individual)." />
-              </SubContainer>
-            </Label>
-            <Label>
-              Fitness Threshold:
-              <SubContainer>
-                <Input type="number" value={fitnessThreshold} onChange={(e) => setFitnessThreshold(e.target.value ? Number(e.target.value) : undefined)} />
-                <Tooltip text="The fitness value at which the algorithm stops." />
-              </SubContainer>
-            </Label>
-            <Label>
-              No Improvement Generations:
-              <SubContainer>
-                <Input type="number" value={noImprovementGenerations} onChange={(e) => setNoImprovementGenerations(Number(e.target.value))} />
-                <Tooltip text="The number of generations with no improvement after which the algorithm stops." />
-              </SubContainer>
-            </Label>
-            <Label>
-              Ant Colony Optimization:
-              <SubContainer>
-                <CustomCheckbox type="checkbox" checked={useAco} onChange={(e) => setUseAco(e.target.checked)} />
-                <Tooltip text="Whether to use Ant Colony Optimization." />
-              </SubContainer>
-            </Label>
-            {useAco && (
+        <AccordionButton onClick={() => setIsAccordionOpen(!isAccordionOpen)}>
+            Genetic Algorithm
+          </AccordionButton>
+          <Collapse isOpened={isAccordionOpen}>
+            <Form onSubmit={handleSubmit}>
               <Label>
-                Pheromone Threshold:
+                Population Size:
                 <SubContainer>
-                  <Input type="number" min={1} max={10} step={1} value={pheromoneThreshold} onChange={(e) => setPheromoneThreshold(e.target.value ? Number(e.target.value) : undefined)} />
-                  <Tooltip text="The pheromone value at which the algorithm stops." />
-                </SubContainer>
-              </Label>
-            )}
-            <Label>
-              Simulated Annealing:
-              <SubContainer>
-                <CustomCheckbox type="checkbox" checked={useSa} onChange={(e) => setUseSa(e.target.checked)} />
-                <Tooltip text="Whether to use Simulated Annealing." />
-              </SubContainer>
-            </Label>
-            {useSa && (
-            <>
-              <Label>
-                Initial Temperature:
-                <SubContainer>
-                  <Input type="number" min={500} max={5000} step={100} value={initialTemp} onChange={(e) => setInitialTemp(e.target.value ? Number(e.target.value) : undefined)} />
-                  <Tooltip text="The initial temperature for the annealing process." />
+                  <Input type="number" value={popSize} onChange={(e) => setPopSize(Number(e.target.value))} />
+                  <Tooltip text="The number of individuals in the population." />
                 </SubContainer>
               </Label>
               <Label>
-                Cooling Rate:
+                Mutation Rate:
                 <SubContainer>
-                  <Input type="number" min={0.9} max={0.999} step={0.001} value={coolingRate} onChange={(e) => setCoolingRate(e.target.value ? Number(e.target.value) : undefined)} />
-                  <Tooltip text="The rate at which the temperature decreases." />
+                  <Input type="number" step="0.01" value={mutationRate} onChange={(e) => setMutationRate(Number(e.target.value))} />
+                  <Tooltip text="The probability of mutating each individual." />
                 </SubContainer>
               </Label>
               <Label>
-                Iterations:
+                Crossover Rate:
                 <SubContainer>
-                  <Input type="number" min={1000} max={10000} step={100} value={iterations} onChange={(e) => setIterations(e.target.value ? Number(e.target.value) : undefined)} />
-                  <Tooltip text="The number of iterations for the annealing process." />
+                  <Input type="number" step="0.01" value={crossoverRate} onChange={(e) => setCrossoverRate(Number(e.target.value))} />
+                  <Tooltip text="The probability of crossover between individuals." />
                 </SubContainer>
               </Label>
-            </>
-            )}
-            {isSubmitting ? <Loader /> : (
+              <Label>
+                Use PMX:
+                <SubContainer>
+                  <CustomCheckbox type="checkbox" checked={usePmx} onChange={(e) => setUsePmx(e.target.checked)} />
+                  <Tooltip text="Whether to use Partially Mapped Crossover (PMX)." />
+                </SubContainer>
+              </Label>
+              <Label>
+                Use OX:
+                <SubContainer>
+                  <CustomCheckbox type="checkbox" checked={useOx} onChange={(e) => setUseOx(e.target.checked)} />
+                  <Tooltip text="Whether to use Order Crossover (OX)." />
+                </SubContainer>
+              </Label>
+              <Label>
+                Use Elitism:
+                <SubContainer>
+                  <CustomCheckbox type="checkbox" checked={useElitism} onChange={(e) => setUseElitism(e.target.checked)} />
+                  <Tooltip text="Whether to use elitism (preserve the best individual)." />
+                </SubContainer>
+              </Label>
+              <Label>
+                Fitness Threshold:
+                <SubContainer>
+                  <Input type="number" value={fitnessThreshold} onChange={(e) => setFitnessThreshold(e.target.value ? Number(e.target.value) : undefined)} />
+                  <Tooltip text="The fitness value at which the algorithm stops." />
+                </SubContainer>
+              </Label>
+              <Label>
+                No Improvement Generations:
+                <SubContainer>
+                  <Input type="number" value={noImprovementGenerations} onChange={(e) => setNoImprovementGenerations(Number(e.target.value))} />
+                  <Tooltip text="The number of generations with no improvement after which the algorithm stops." />
+                </SubContainer>
+              </Label>
+              <Label>
+                Ant Colony Optimization:
+                <SubContainer>
+                  <CustomCheckbox type="checkbox" checked={useAco} onChange={(e) => setUseAco(e.target.checked)} />
+                  <Tooltip text="Whether to use Ant Colony Optimization." />
+                </SubContainer>
+              </Label>
+              {useAco && (
+                <Label>
+                  Pheromone Threshold:
+                  <SubContainer>
+                    <Input type="number" min={1} max={10} step={1} value={pheromoneThreshold} onChange={(e) => setPheromoneThreshold(e.target.value ? Number(e.target.value) : undefined)} />
+                    <Tooltip text="The pheromone value at which the algorithm stops." />
+                  </SubContainer>
+                </Label>
+              )}
+              <Label>
+                Simulated Annealing:
+                <SubContainer>
+                  <CustomCheckbox type="checkbox" checked={useSa} onChange={(e) => setUseSa(e.target.checked)} />
+                  <Tooltip text="Whether to use Simulated Annealing." />
+                </SubContainer>
+              </Label>
+              {useSa && (
               <>
-                <Button type="submit">Run Genetic Algorithm</Button>
-                <Button type="button" onClick={handleBruteForceSubmit}>Run Brute Force</Button>
+                <Label>
+                  Initial Temperature:
+                  <SubContainer>
+                    <Input type="number" min={500} max={5000} step={100} value={initialTemp} onChange={(e) => setInitialTemp(e.target.value ? Number(e.target.value) : undefined)} />
+                    <Tooltip text="The initial temperature for the annealing process." />
+                  </SubContainer>
+                </Label>
+                <Label>
+                  Cooling Rate:
+                  <SubContainer>
+                    <Input type="number" min={0.9} max={0.999} step={0.001} value={coolingRate} onChange={(e) => setCoolingRate(e.target.value ? Number(e.target.value) : undefined)} />
+                    <Tooltip text="The rate at which the temperature decreases." />
+                  </SubContainer>
+                </Label>
+                <Label>
+                  Iterations:
+                  <SubContainer>
+                    <Input type="number" min={1000} max={10000} step={100} value={iterations} onChange={(e) => setIterations(e.target.value ? Number(e.target.value) : undefined)} />
+                    <Tooltip text="The number of iterations for the annealing process." />
+                  </SubContainer>
+                </Label>
               </>
-            )}
-          </Form>
+              )}
+              {isSubmitting ? <Loader /> : (
+                <>
+                  <Button type="submit">Run Genetic Algorithm</Button>
+                </>
+              )}
+            </Form>
+          </Collapse>
+          {isSubmitting ? <Loader /> : (
+                <>
+                  <Button type="button" onClick={handleBestFirstSearchSubmit}>Best First Search</Button>
+                  <Button type="button" onClick={handleBruteForceSubmit}>Brute Force</Button>
+                </>
+              )}
         </Container>
       </Container>
       
@@ -496,7 +557,7 @@ const Map: React.FC = () => {
                   );
                 })}
                 <p><b>Total:</b> {currentSolution.distance} km</p>
-                <p><b>Execution Time:</b> {executionTime ? `${executionTime} ms` : 'N/A'}</p>
+                {/* <p><b>Execution Time:</b> {executionTime ? `${executionTime} ms` : 'N/A'}</p> */}
               </>
             )}
           </RouteList>
@@ -506,6 +567,7 @@ const Map: React.FC = () => {
           <h2>About</h2>
           <ul style={{ listStyle: "none", margin: 0 }}>
             <li>Portfolio Project for CS506 | Algorithms and Data Structures<hr></hr></li>
+            <li>Implemented Best First Search for CS510 | Foundations of AI</li>
             <li>Source available on <a href="https://github.com/Dizolivemint/CS506-Algorithms-and-Data-Structures">GitHub</a><hr></hr></li>
             <li>Consult me on your next project through <a href='https://www.linkedin.com/in/milesexner/'>LinkedIn</a><hr></hr></li>
             <li>&copy; {year} Miles Exner. All rights reserved</li>
