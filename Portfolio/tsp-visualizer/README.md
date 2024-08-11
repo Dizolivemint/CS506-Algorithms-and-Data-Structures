@@ -1,46 +1,107 @@
-# Getting Started with Create React App
+Here's a `README.md` to help guide users on how to launch the API backend and the React frontend locally:
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+---
 
-## Available Scripts
+# Traveling Salesman Problem Visualizer
 
-In the project directory, you can run:
+This project consists of a Genetic Algorithm (GA), Simulated Annealing (SA) and Best First Search powered API backend built with Flask, and a React frontend for visualizing the results. This guide will walk you through setting up the project locally.
 
-### `npm start`
+## Prerequisites
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+Before starting, ensure you have the following installed:
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+- **Python 3.8+**
+- **Node.js 14+**
+- **npm or yarn**
 
-### `npm test`
+## Setting Up the Backend
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### 1. Clone the Repository
 
-### `npm run build`
+```bash
+git clone https://github.com/your-username/your-repo.git
+cd your-repo
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### 2. Set Up a Virtual Environment
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+Create and activate a virtual environment:
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
+```
 
-### `npm run eject`
+### 3. Install Python Dependencies
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+Install the required Python packages:
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```bash
+pip install -r requirements.txt
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+### 4. Run the Flask Backend
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+Start the Flask API server:
 
-## Learn More
+```bash
+python -m app.app
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+The API server should now be running on `http://127.0.0.1:5000`.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### 5. (Optional) Run the Flask API in Development Mode
+
+If you want to enable auto-reloading and other development features, run:
+
+```bash
+FLASK_APP=app.app FLASK_ENV=development flask run
+```
+
+## Setting Up the Frontend
+
+### 1. Navigate to the Frontend Directory
+
+```bash
+cd frontend  # Replace 'frontend' with your frontend directory's name if different
+```
+
+### 2. Install Frontend Dependencies
+
+If you're using npm:
+
+```bash
+npm install
+```
+
+Or if you're using yarn:
+
+```bash
+yarn install
+```
+
+### 3. Start the React Frontend
+
+If you're using npm:
+
+```bash
+npm start
+```
+
+Or if you're using yarn:
+
+```bash
+yarn start
+```
+
+The frontend should now be running on `http://localhost:3000`.
+
+## Accessing the Application
+
+- **API Backend**: `http://127.0.0.1:5000`
+- **React Frontend**: `http://localhost:3000`
+
+## Troubleshooting
+
+- **Port Conflicts**: Ensure the ports `5000` (backend) and `3000` (frontend) are available on your machine.
+- **Environment Variables**: Double-check that all required environment variables are correctly set in your `.env` files.
